@@ -11,7 +11,53 @@ class Compte extends Model
     /** @use HasFactory<\Database\Factories\CompteFactory> */
     use HasFactory, HasUuids;
 
+    protected $keyType = 'string';
+    public $incrementing = false;
+
+    protected $fillable = [
+        'numero_compte',
+        'type_compte',
+        'status_compte',
+        'telephone',
+        'client_id',
+        'is_deleted',
+    ];
+
     public function client() {
         return $this->belongsTo(Client::class);
+    }
+
+    public function transactions() {
+        return $this->hasMany(Transaction::class);
+    }
+
+    /**
+     * Mutateur pour générer automatiquement un numéro de compte
+     */
+    protected static function booted()
+    {
+        static::addGlobalScope('not_deleted', function ($query) {
+            $query->where('is_deleted', false);
+        });
+
+        static::creating(function ($compte) {
+            if (empty($compte->numero_compte)) {
+                $compte->numero_compte = self::generateNumeroCompte();
+            }
+        });
+    }
+
+    /**
+     * Génère un numéro de compte unique
+     */
+    private static function generateNumeroCompte(): string
+    {
+        do {
+            $prefix = now()->format('Ymd');
+            $random = str_pad(mt_rand(0, 99999999), 8, '0', STR_PAD_LEFT);
+            $numero = $prefix . $random;
+        } while (self::where('numero_compte', $numero)->exists());
+
+        return $numero;
     }
 }

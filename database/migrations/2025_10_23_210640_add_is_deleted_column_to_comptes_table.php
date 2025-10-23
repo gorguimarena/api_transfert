@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->enum('type', ['client', 'admin'])->default('client');
-            $table->index('type');
+        Schema::table('comptes', function (Blueprint $table) {
+            $table->boolean('is_deleted')->default(false)->index();
         });
     }
 
@@ -22,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('type');
+        Schema::table('comptes', function (Blueprint $table) {
+            $table->dropColumn('is_deleted');
         });
     }
 };
