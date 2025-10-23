@@ -11,17 +11,6 @@ COPY composer.json composer.lock ./
 # Install dependencies (without dev dependencies for production)
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Stage 2: Build assets (if using frontend assets)
-FROM node:18 as assets
-
-WORKDIR /app
-
-# Copy package files
-COPY package.json package-lock.json ./
-
-# Install dependencies and build assets
-RUN npm ci && npm run build
-
 # Stage 3: Production image
 FROM php:8.2-fpm
 
@@ -52,8 +41,6 @@ COPY . .
 
 # Copy dependencies from vendor stage
 COPY --from=vendor /app/vendor ./vendor
-
-COPY --from=assets /app/public/build ./public/build
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www && \
