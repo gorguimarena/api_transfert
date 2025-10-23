@@ -1,10 +1,3 @@
-# Stage 1: Build dependencies
-FROM composer:2 as vendor
-WORKDIR /app
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-interaction
-
-# Stage 2: Production image
 FROM php:8.2-fpm
 
 # System dependencies
@@ -23,8 +16,11 @@ RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini && \
 WORKDIR /var/www
 COPY . .
 
-# Copy dependencies from vendor stage
-COPY --from=vendor /app/vendor ./vendor
+# Installer Composer manuellement
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Installer les dépendances Laravel
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www && \
