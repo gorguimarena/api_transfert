@@ -53,7 +53,6 @@ COPY . .
 # Copy dependencies from vendor stage
 COPY --from=vendor /app/vendor ./vendor
 
-# Copy built assets from assets stage (if applicable)
 COPY --from=assets /app/public/build ./public/build
 
 # Set permissions
