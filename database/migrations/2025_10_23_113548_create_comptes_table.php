@@ -14,11 +14,16 @@ return new class extends Migration
         Schema::create('comptes', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('numero_compte');
-            $table->enum('type_compte', ['epargne', 'cheque'])->index();
-            $table->enum('status_compte', ['active', 'bloque'])->index();
+            $table->enum('type_compte', ['epargne', 'cheque']);
+            $table->enum('status_compte', ['active', 'bloque']);
             $table->string('telephone');
             $table->foreignUuid('client_id')->references('id')->on('clients')->onDelete('cascade');
             $table->timestamps();
+
+            $table->index('client_id');
+            $table->index('status_compte');
+            $table->index('type_compte');
+            $table->index(['client_id', 'status_compte']); 
         });
     }
 
