@@ -2,7 +2,8 @@ services:
   - type: web
     name: laravel-api
     runtime: docker
-    dockerfilePath: docker/deployment/Dockerfile
+    rootDirectory: /
+    dockerfilePath: Dockerfile
     envVars:
       - key: APP_ENV
         value: production
