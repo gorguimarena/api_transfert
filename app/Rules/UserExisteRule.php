@@ -22,7 +22,6 @@ class UserExisteRule implements ValidationRule
             return;
         }
 
-        // Vérifier si l'utilisateur a déjà un client
         if (!$user->client) {
             $fail('L\'utilisateur spécifié n\'a pas de profil client.');
             return;
