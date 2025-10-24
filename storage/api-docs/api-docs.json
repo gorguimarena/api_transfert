@@ -11,19 +11,19 @@
         }
     ],
     "paths": {
-        "/api/comptes": {
+        "/api/V1/comptes": {
             "get": {
                 "tags": [
                     "Comptes"
                 ],
-                "summary": "List all accounts with optional filters",
-                "description": "Retrieve a paginated list of bank accounts with optional filtering by account number, user name, type, and status",
-                "operationId": "4059c2a0b4cce9e57227146f5b16138d",
+                "summary": "Lister tous les comptes avec filtres optionnels",
+                "description": "Récupère une liste paginée des comptes bancaires avec filtrage optionnel par numéro de compte, nom d'utilisateur, type et statut",
+                "operationId": "f01590aab10f8bb8a4e53ded7d36063d",
                 "parameters": [
                     {
                         "name": "numero_compte",
                         "in": "query",
-                        "description": "Filter by account number (partial match)",
+                        "description": "Filtrer par numéro de compte (correspondance partielle)",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -32,7 +32,7 @@
                     {
                         "name": "nom_user",
                         "in": "query",
-                        "description": "Filter by user name (partial match)",
+                        "description": "Filtrer par nom d'utilisateur (correspondance partielle)",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -41,7 +41,7 @@
                     {
                         "name": "type",
                         "in": "query",
-                        "description": "Filter by account type",
+                        "description": "Filtrer par type de compte",
                         "required": false,
                         "schema": {
                             "type": "string",
@@ -54,7 +54,7 @@
                     {
                         "name": "statut",
                         "in": "query",
-                        "description": "Filter by account status",
+                        "description": "Filtrer par statut du compte",
                         "required": false,
                         "schema": {
                             "type": "string",
@@ -67,7 +67,7 @@
                     {
                         "name": "sort",
                         "in": "query",
-                        "description": "Sort field",
+                        "description": "Champ de tri",
                         "required": false,
                         "schema": {
                             "type": "string",
@@ -83,7 +83,7 @@
                     {
                         "name": "order",
                         "in": "query",
-                        "description": "Sort order",
+                        "description": "Ordre de tri",
                         "required": false,
                         "schema": {
                             "type": "string",
@@ -97,7 +97,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Number of items per page",
+                        "description": "Nombre d'éléments par page",
                         "required": false,
                         "schema": {
                             "type": "integer",
@@ -107,7 +107,7 @@
                     {
                         "name": "page",
                         "in": "query",
-                        "description": "Page number",
+                        "description": "Numéro de page",
                         "required": false,
                         "schema": {
                             "type": "integer",
@@ -117,7 +117,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Successful operation",
+                        "description": "Opération réussie",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -162,9 +162,9 @@
                 "tags": [
                     "Comptes"
                 ],
-                "summary": "Create a new account",
-                "description": "Create a new bank account. If user_id is provided, uses existing client. Otherwise, creates new client with provided information.",
-                "operationId": "d46221922144c672a4a500c7f3755629",
+                "summary": "Créer un nouveau compte",
+                "description": "Créer un nouveau compte bancaire. Si user_id est fourni, utilise le client existant. Sinon, crée un nouveau client avec les informations fournies.",
+                "operationId": "c4f1fd73d522111657643799eda330a8",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -201,23 +201,23 @@
                                         "example": "+221771234567"
                                     },
                                     "user_id": {
-                                        "description": "Existing user ID (optional)",
+                                        "description": "ID utilisateur existant (optionnel)",
                                         "type": "string",
                                         "format": "uuid"
                                     },
                                     "client_name": {
-                                        "description": "Client name (required if no user_id)",
+                                        "description": "Nom du client (requis si pas de user_id)",
                                         "type": "string",
                                         "example": "John Doe"
                                     },
                                     "client_email": {
-                                        "description": "Client email (required if no user_id)",
+                                        "description": "Email du client (requis si pas de user_id)",
                                         "type": "string",
                                         "format": "email",
                                         "example": "john@example.com"
                                     },
                                     "client_password": {
-                                        "description": "Client password (required if no user_id)",
+                                        "description": "Mot de passe du client (requis si pas de user_id)",
                                         "type": "string",
                                         "example": "password123"
                                     }
@@ -229,7 +229,7 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Account created successfully",
+                        "description": "Compte créé avec succès",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -252,7 +252,7 @@
                         }
                     },
                     "400": {
-                        "description": "Validation error",
+                        "description": "Erreur de validation",
                         "content": {
                             "application/json": {
                                 "schema": {

@@ -92,28 +92,28 @@ class CompteController extends Controller
         ];
     /**
      * @OA\Get(
-     *     path="/api/comptes",
+     *     path="/api/V1/comptes",
      *     tags={"Comptes"},
-     *     summary="List all accounts with optional filters",
-     *     description="Retrieve a paginated list of bank accounts with optional filtering by account number, user name, type, and status",
+     *     summary="Lister tous les comptes avec filtres optionnels",
+     *     description="Récupère une liste paginée des comptes bancaires avec filtrage optionnel par numéro de compte, nom d'utilisateur, type et statut",
      *     @OA\Parameter(
      *         name="numero_compte",
      *         in="query",
-     *         description="Filter by account number (partial match)",
+     *         description="Filtrer par numéro de compte (correspondance partielle)",
      *         required=false,
      *         @OA\Schema(type="string")
      *     ),
      *     @OA\Parameter(
      *         name="nom_user",
      *         in="query",
-     *         description="Filter by user name (partial match)",
+     *         description="Filtrer par nom d'utilisateur (correspondance partielle)",
      *         required=false,
      *         @OA\Schema(type="string")
      *     ),
      *     @OA\Parameter(
      *         name="type",
      *         in="query",
-     *         description="Filter by account type",
+     *         description="Filtrer par type de compte",
      *         required=false,
      *         @OA\Schema(
      *             type="string",
@@ -123,7 +123,7 @@ class CompteController extends Controller
      *     @OA\Parameter(
      *         name="statut",
      *         in="query",
-     *         description="Filter by account status",
+     *         description="Filtrer par statut du compte",
      *         required=false,
      *         @OA\Schema(
      *             type="string",
@@ -133,7 +133,7 @@ class CompteController extends Controller
      *     @OA\Parameter(
      *         name="sort",
      *         in="query",
-     *         description="Sort field",
+     *         description="Champ de tri",
      *         required=false,
      *         @OA\Schema(
      *             type="string",
@@ -144,7 +144,7 @@ class CompteController extends Controller
      *     @OA\Parameter(
      *         name="order",
      *         in="query",
-     *         description="Sort order",
+     *         description="Ordre de tri",
      *         required=false,
      *         @OA\Schema(
      *             type="string",
@@ -155,20 +155,20 @@ class CompteController extends Controller
      *     @OA\Parameter(
      *         name="limit",
      *         in="query",
-     *         description="Number of items per page",
+     *         description="Nombre d'éléments par page",
      *         required=false,
      *         @OA\Schema(type="integer", default=10)
      *     ),
      *     @OA\Parameter(
      *         name="page",
      *         in="query",
-     *         description="Page number",
+     *         description="Numéro de page",
      *         required=false,
      *         @OA\Schema(type="integer", default=1)
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Successful operation",
+     *         description="Opération réussie",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Comptes récupérés avec succès"),
@@ -197,10 +197,10 @@ class CompteController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/comptes",
+     *     path="/api/V1/comptes",
      *     tags={"Comptes"},
-     *     summary="Create a new account",
-     *     description="Create a new bank account. If user_id is provided, uses existing client. Otherwise, creates new client with provided information.",
+     *     summary="Créer un nouveau compte",
+     *     description="Créer un nouveau compte bancaire. Si user_id est fourni, utilise le client existant. Sinon, crée un nouveau client avec les informations fournies.",
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -209,15 +209,15 @@ class CompteController extends Controller
      *             @OA\Property(property="type_compte", type="string", enum={"epargne", "cheque"}, example="epargne"),
      *             @OA\Property(property="status_compte", type="string", enum={"active", "bloque"}, example="active"),
      *             @OA\Property(property="telephone", type="string", example="+221771234567"),
-     *             @OA\Property(property="user_id", type="string", format="uuid", description="Existing user ID (optional)"),
-     *             @OA\Property(property="client_name", type="string", description="Client name (required if no user_id)", example="John Doe"),
-     *             @OA\Property(property="client_email", type="string", format="email", description="Client email (required if no user_id)", example="john@example.com"),
-     *             @OA\Property(property="client_password", type="string", description="Client password (required if no user_id)", example="password123")
+     *             @OA\Property(property="user_id", type="string", format="uuid", description="ID utilisateur existant (optionnel)"),
+     *             @OA\Property(property="client_name", type="string", description="Nom du client (requis si pas de user_id)", example="John Doe"),
+     *             @OA\Property(property="client_email", type="string", format="email", description="Email du client (requis si pas de user_id)", example="john@example.com"),
+     *             @OA\Property(property="client_password", type="string", description="Mot de passe du client (requis si pas de user_id)", example="password123")
      *         )
      *     ),
      *     @OA\Response(
      *         response=201,
-     *         description="Account created successfully",
+     *         description="Compte créé avec succès",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Compte créé avec succès"),
@@ -226,7 +226,7 @@ class CompteController extends Controller
      *     ),
      *     @OA\Response(
      *         response=400,
-     *         description="Validation error",
+     *         description="Erreur de validation",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Erreur de validation"),
