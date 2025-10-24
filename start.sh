@@ -16,6 +16,10 @@ else
     echo "Database already contains data, skipping seeders."
 fi
 
+# Generate Swagger documentation
+echo "Generating Swagger documentation..."
+php artisan l5-swagger:generate
+
 # Cache configurations for production
 echo "Caching configurations..."
 php artisan config:cache
