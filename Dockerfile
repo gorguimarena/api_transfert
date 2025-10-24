@@ -30,10 +30,6 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 RUN chown -R www-data:www-data /var/www && \
     chmod -R 755 /var/www/storage /var/www/bootstrap/cache
 
-# Nginx + Supervisor config
-COPY docker/deployment/nginx.conf /etc/nginx/sites-available/default
-COPY docker/deployment/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-EXPOSE 80
+EXPOSE 9000
 
 CMD ["/usr/local/bin/start.sh"]

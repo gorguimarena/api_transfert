@@ -26,10 +26,6 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# Start PHP-FPM in background
+# Start PHP-FPM in foreground
 echo "Starting PHP-FPM..."
-php-fpm &
-
-# Start Nginx in foreground
-echo "Starting Nginx..."
-nginx -g "daemon off;"
+php-fpm
