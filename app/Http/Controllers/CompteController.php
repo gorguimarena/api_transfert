@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Hash;
  *     version="1.0.0",
  *     description="API pour la gestion des comptes bancaires"
  * )
- * @OA\Server(url="http://localhost:8000/api")
+ * @OA\Server(url="https://api-transfert.onrender.com/api")
  *
  * @OA\Schema(
  *     schema="Compte",
@@ -138,7 +138,7 @@ class CompteController extends Controller
      *         @OA\Schema(
      *             type="string",
      *             enum={"dateCreation", "numero_compte", "type_compte", "status_compte"},
-     *             default="created_at"
+     *             default="dateCreation"
      *         )
      *     ),
      *     @OA\Parameter(

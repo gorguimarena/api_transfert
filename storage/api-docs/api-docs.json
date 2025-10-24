@@ -7,7 +7,7 @@
     },
     "servers": [
         {
-            "url": "http://localhost:8000/api"
+            "url": "https://api-transfert.onrender.com/api"
         }
     ],
     "paths": {
@@ -71,11 +71,10 @@
                         "required": false,
                         "schema": {
                             "type": "string",
-                            "default": "created_at",
+                            "default": "dateCreation",
                             "enum": [
                                 "dateCreation",
                                 "numero_compte",
-                                "solde",
                                 "type_compte",
                                 "status_compte"
                             ]
@@ -149,6 +148,124 @@
                                                     "type": "integer"
                                                 }
                                             },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Comptes"
+                ],
+                "summary": "Create a new account",
+                "description": "Create a new bank account. If user_id is provided, uses existing client. Otherwise, creates new client with provided information.",
+                "operationId": "d46221922144c672a4a500c7f3755629",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "numero_compte",
+                                    "type_compte",
+                                    "telephone"
+                                ],
+                                "properties": {
+                                    "numero_compte": {
+                                        "type": "string",
+                                        "example": "123456789"
+                                    },
+                                    "type_compte": {
+                                        "type": "string",
+                                        "enum": [
+                                            "epargne",
+                                            "cheque"
+                                        ],
+                                        "example": "epargne"
+                                    },
+                                    "status_compte": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "bloque"
+                                        ],
+                                        "example": "active"
+                                    },
+                                    "telephone": {
+                                        "type": "string",
+                                        "example": "+221771234567"
+                                    },
+                                    "user_id": {
+                                        "description": "Existing user ID (optional)",
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "client_name": {
+                                        "description": "Client name (required if no user_id)",
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "client_email": {
+                                        "description": "Client email (required if no user_id)",
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    },
+                                    "client_password": {
+                                        "description": "Client password (required if no user_id)",
+                                        "type": "string",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Account created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Compte créé avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Compte"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur de validation"
+                                        },
+                                        "errors": {
                                             "type": "object"
                                         }
                                     },
