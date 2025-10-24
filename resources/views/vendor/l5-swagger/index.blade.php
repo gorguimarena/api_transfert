@@ -1,9 +1,3 @@
-@php
-    $documentation = $documentation ?? config('l5-swagger.default');
-    $documentationTitle = $documentationTitle ?? config('app.name', 'API Documentation');
-    $useAbsolutePath = $useAbsolutePath ?? false;
-@endphp
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
