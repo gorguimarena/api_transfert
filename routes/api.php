@@ -1,8 +1,7 @@
 <?php
 
-use App\Http\Controllers\CompteController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CompteController;
 
 Route::middleware('api')->group(function () {
     Route::prefix('comptes')->group(function () {

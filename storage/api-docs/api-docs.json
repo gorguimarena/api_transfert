@@ -7,7 +7,7 @@
     },
     "servers": [
         {
-            "url": "http://localhost:8000/api"
+            "url": "https://api-transfert.onrender.com/api"
         }
     ],
     "paths": {
@@ -71,7 +71,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
-                            "default": "created_at",
+                            "default": "dateCreation",
                             "enum": [
                                 "dateCreation",
                                 "numero_compte",
