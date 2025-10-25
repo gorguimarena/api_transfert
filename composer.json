@@ -14,7 +14,8 @@
         "laravel/framework": "^12.0",
         "laravel/passport": "^13.2",
         "laravel/sanctum": "^4.0",
-        "laravel/tinker": "^2.10.1"
+        "laravel/tinker": "^2.10.1",
+        "zircote/swagger-php": "^5.5"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.16",

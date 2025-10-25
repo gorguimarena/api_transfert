@@ -20,12 +20,21 @@ fi
 echo "Generating Swagger documentation..."
 php artisan l5-swagger:generate
 
+# Copy Swagger UI assets to public directory
+echo "Copying Swagger UI assets..."
+mkdir -p public/docs
+cp -r vendor/swagger-api/swagger-ui/dist/* public/docs/
+
 # Cache configurations for production
 echo "Caching configurations..."
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# Start PHP-FPM in foreground
+# Start PHP-FPM in background
 echo "Starting PHP-FPM..."
-php-fpm
+php-fpm &
+
+# Start Nginx in foreground
+echo "Starting Nginx..."
+nginx -g "daemon off;"
