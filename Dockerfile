@@ -29,6 +29,7 @@ COPY --from=composer-build /app/vendor ./vendor
 COPY . .
 
 # Créer les répertoires nécessaires et définir les permissions
+# Créer les répertoires
 RUN mkdir -p storage/framework/{cache,data,sessions,testing,views} \
     && mkdir -p storage/logs \
     && mkdir -p bootstrap/cache \
@@ -38,6 +39,7 @@ RUN mkdir -p storage/framework/{cache,data,sessions,testing,views} \
 
 # Générer la clé d'application et optimiser
 USER laravel
+
 RUN php artisan key:generate --force && \
     php artisan config:cache && \
     php artisan route:cache && \
