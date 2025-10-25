@@ -32,6 +32,6 @@ else
     echo "Database already contains data, skipping seeders."
 fi
 
-# Start Supervisor to manage PHP-FPM and Nginx
-echo "Starting Supervisor..."
-exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+# Start PHP-FPM in foreground
+echo "Starting PHP-FPM..."
+php-fpm

@@ -12,13 +12,13 @@ return [
                 /*
                  * Route for accessing api documentation interface
                  */
-                'api' => 'api/documentation',
+                'api' => 'marena.gorgui/api/documentation',
             ],
             'paths' => [
                 /*
                  * Edit to include full URL in ui for assets
                  */
-                'use_absolute_path' => env('L5_SWAGGER_USE_ABSOLUTE_PATH', false),
+                'use_absolute_path' => env('L5_SWAGGER_USE_ABSOLUTE_PATH', true),
 
                 /*
                 * Edit to set path where swagger ui assets should be stored
@@ -54,7 +54,7 @@ return [
             /*
              * Route for accessing parsed swagger annotations.
              */
-            'docs' => 'docs',
+            'docs' => 'api/documentation',
 
             /*
              * Route for Oauth2 authentication callback.
@@ -218,8 +218,8 @@ return [
             ],
             'security' => [
                 /*
-                 * Examples of Securities
-                 */
+                  * Examples of Securities
+                  */
                 [
                     /*
                     'oauth2_security_example' => [
@@ -227,8 +227,9 @@ return [
                         'write'
                     ],
 
-                    'passport' => []
+                    'sanctum' => []
                     */
+                    'passport' => []
                 ],
             ],
         ],
@@ -312,7 +313,7 @@ return [
          * Constants which can be used in annotations
          */
         'constants' => [
-            'L5_SWAGGER_CONST_HOST' => env('L5_SWAGGER_CONST_HOST', 'https://api-transfert.onrender.com'),
+            'L5_SWAGGER_CONST_HOST' => env('L5_SWAGGER_CONST_HOST', 'http://my-default-host.com'),
         ],
     ],
 ];

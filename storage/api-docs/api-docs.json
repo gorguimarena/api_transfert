@@ -7,7 +7,12 @@
     },
     "servers": [
         {
-            "url": "https://api-transfert.onrender.com/api"
+            "url": "http://localhost:8080/api",
+            "description": "Serveur de développement"
+        },
+        {
+            "url": "https://api-transfert.onrender.com/api",
+            "description": "Serveur de production"
         }
     ],
     "paths": {
@@ -157,14 +162,16 @@
                         }
                     }
                 }
-            },
+            }
+        },
+        "/api/v1/comptes": {
             "post": {
                 "tags": [
                     "Comptes"
                 ],
                 "summary": "Créer un nouveau compte",
                 "description": "Créer un nouveau compte bancaire. Si user_id est fourni, utilise le client existant. Sinon, crée un nouveau client avec les informations fournies.",
-                "operationId": "c4f1fd73d522111657643799eda330a8",
+                "operationId": "aa399240cc7c1f272aa92fe6d6b4e162",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -385,6 +392,11 @@
         {
             "name": "Comptes",
             "description": "Comptes"
+        }
+    ],
+    "security": [
+        {
+            "passport": []
         }
     ]
 }

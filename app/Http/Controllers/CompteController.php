@@ -19,7 +19,14 @@ use Illuminate\Support\Facades\Hash;
  *     version="1.0.0",
  *     description="API pour la gestion des comptes bancaires"
  * )
- * @OA\Server(url="https://api-transfert.onrender.com/api")
+ * @OA\Server(
+ *     url="http://localhost:8080/api",
+ *     description="Serveur de développement"
+ * )
+ * @OA\Server(
+ *     url="https://api-transfert.onrender.com/api",
+ *     description="Serveur de production"
+ * )
  *
  * @OA\Schema(
  *     schema="Compte",
@@ -54,6 +61,7 @@ use Illuminate\Support\Facades\Hash;
  *     @OA\Property(property="updated_at", type="string", format="date-time")
  * )
  */
+
 class CompteController extends Controller
 {
     use ResponseTrait;
@@ -197,7 +205,7 @@ class CompteController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/V1/comptes",
+     *     path="/api/v1/comptes",
      *     tags={"Comptes"},
      *     summary="Créer un nouveau compte",
      *     description="Créer un nouveau compte bancaire. Si user_id est fourni, utilise le client existant. Sinon, crée un nouveau client avec les informations fournies.",

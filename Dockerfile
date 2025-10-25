@@ -1,52 +1,58 @@
-FROM php:8.2-fpm
+# Étape 1: Build des dépendances PHP
+FROM composer:2.6 AS composer-build
 
-# System dependencies
-RUN apt-get update && apt-get install -y \
-    git unzip curl libpq-dev libzip-dev zip nginx supervisor \
-    && docker-php-ext-install pdo pdo_pgsql zip opcache \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
 
-# PHP production config
-RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini && \
-    echo "opcache.memory_consumption=256" >> /usr/local/etc/php/conf.d/opcache.ini && \
-    echo "opcache.max_accelerated_files=7963" >> /usr/local/etc/php/conf.d/opcache.ini && \
-    echo "opcache.revalidate_freq=0" >> /usr/local/etc/php/conf.d/opcache.ini
+# Copier les fichiers de dépendances
+COPY composer.json composer.lock ./
 
-# Application code
-WORKDIR /var/www
+# Installer les dépendances PHP sans scripts post-install
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
+
+# Étape 2: Image finale pour l'application
+FROM php:8.3-fpm-alpine
+
+# Installer les extensions PHP nécessaires
+RUN apk add --no-cache postgresql-dev \
+    && docker-php-ext-install pdo pdo_pgsql
+
+# Créer un utilisateur non-root
+RUN addgroup -g 1000 laravel && adduser -G laravel -g laravel -s /bin/sh -D laravel
+
+# Définir le répertoire de travail
+WORKDIR /var/www/html
+
+# Copier les dépendances installées depuis l'étape de build
+COPY --from=composer-build /app/vendor ./vendor
+
+# Copier le reste du code de l'application
 COPY . .
 
-# Copy start script and make it executable
-COPY start.sh /usr/local/bin/start.sh
-RUN chmod +x /usr/local/bin/start.sh
+# Créer les répertoires nécessaires et définir les permissions
+RUN mkdir -p storage/framework/{cache,data,sessions,testing,views} \
+    && mkdir -p storage/logs \
+    && mkdir -p bootstrap/cache \
+    && chown -R laravel:laravel /var/www/html \
+    && chmod -R 775 storage bootstrap/cache
 
-# Installer Composer manuellement
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Installer les dépendances Laravel
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Changer les permissions du fichier .env pour l'utilisateur laravel
+RUN chown laravel:laravel .env
 
-# Generate Swagger documentation
-RUN php artisan l5-swagger:generate
-
-# Copy Swagger UI assets to public directory
-RUN mkdir -p public/docs && cp -r vendor/swagger-api/swagger-ui/dist/* public/docs/
-
-# Cache configurations for production
-RUN php artisan config:cache && \
+# Générer la clé d'application et optimiser
+USER laravel
+RUN php artisan key:generate --force && \
+    php artisan config:cache && \
     php artisan route:cache && \
     php artisan view:cache
+USER root
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www && \
-    chmod -R 755 /var/www/storage /var/www/bootstrap/cache
+# Copier le script d'entrée
+# COPY docker-entrypoint.sh /usr/local/bin/
+# RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-RUN php artisan l5-swagger:generate
+# Exposer le port 9000
+EXPOSE 9000
 
-# Nginx + Supervisor config
-COPY docker/deployment/nginx.conf /etc/nginx/sites-available/default
-COPY docker/deployment/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-EXPOSE 80
-
-CMD ["/usr/local/bin/start.sh"]
+# Commande par défaut
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=9000"]
