@@ -43,9 +43,6 @@ USER laravel
 # Exposer le port 9000 (port par défaut de Render)
 EXPOSE 9000
 
-# Générer la clé d'application et optimiser pour la production
-USER laravel
-RUN php artisan key:generate --force
 
 USER root
 
