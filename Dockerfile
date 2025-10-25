@@ -10,7 +10,7 @@ COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
 
 # Étape 2: Image finale pour l'application
-FROM php:8.3-fpm-alpine
+FROM php:8.2-fpm-alpine
 
 # Installer les extensions PHP nécessaires
 RUN apk add --no-cache postgresql-dev \
@@ -36,9 +36,6 @@ RUN mkdir -p storage/framework/{cache,data,sessions,testing,views} \
     && chmod -R 775 storage bootstrap/cache
 
 
-# Changer les permissions du fichier .env pour l'utilisateur laravel
-RUN chown laravel:laravel
-
 # Générer la clé d'application et optimiser
 USER laravel
 RUN php artisan key:generate --force && \
@@ -47,12 +44,12 @@ RUN php artisan key:generate --force && \
     php artisan view:cache
 USER root
 
-# Copier le script d'entrée
-# COPY docker-entrypoint.sh /usr/local/bin/
-# RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+# Copier et rendre exécutable le script de démarrage
+COPY start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
 
 # Exposer le port 9000
 EXPOSE 9000
 
 # Commande par défaut
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=9000"]
+CMD ["/usr/local/bin/start.sh"]

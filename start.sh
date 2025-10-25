@@ -32,6 +32,6 @@ else
     echo "Database already contains data, skipping seeders."
 fi
 
-# Start PHP-FPM in foreground
-echo "Starting PHP-FPM..."
-php-fpm
+# Start Laravel development server
+echo "Starting Laravel development server..."
+php artisan serve --host=0.0.0.0 --port=9000
