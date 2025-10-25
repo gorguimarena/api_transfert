@@ -37,7 +37,7 @@ RUN mkdir -p storage/framework/{cache,data,sessions,testing,views} \
 
 
 # Changer les permissions du fichier .env pour l'utilisateur laravel
-RUN chown laravel:laravel .env
+RUN chown laravel:laravel
 
 # Générer la clé d'application et optimiser
 USER laravel
