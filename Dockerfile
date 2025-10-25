@@ -38,18 +38,14 @@ RUN mkdir -p storage/framework/{cache,data,sessions,testing,views} \
     && chown -R laravel:laravel /var/www/html \
     && chmod -R 775 storage bootstrap/cache
 
-# Copier et rendre exécutable le script de démarrage
-COPY start.sh /usr/local/bin/start.sh
-RUN chmod +x /usr/local/bin/start.sh
-
 # Exposer le port 9000 (port par défaut de Render)
 EXPOSE 9000
 
-# Générer la clé d'application avec des variables d'environnement temporaires
-USER laravel
-RUN APP_NAME="Banque Backend" APP_ENV=production APP_DEBUG=false php artisan key:generate --force
-
 USER root
+
+# Copier et rendre exécutable le script de démarrage
+COPY start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
 
 # Commande par défaut pour Render
 CMD ["/usr/local/bin/start.sh"]
