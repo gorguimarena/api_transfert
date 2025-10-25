@@ -26,6 +26,17 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # Installer les dépendances Laravel
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
+# Generate Swagger documentation
+RUN php artisan l5-swagger:generate
+
+# Copy Swagger UI assets to public directory
+RUN mkdir -p public/docs && cp -r vendor/swagger-api/swagger-ui/dist/* public/docs/
+
+# Cache configurations for production
+RUN php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan view:cache
+
 # Set permissions
 RUN chown -R www-data:www-data /var/www && \
     chmod -R 755 /var/www/storage /var/www/bootstrap/cache
