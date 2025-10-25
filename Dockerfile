@@ -10,10 +10,10 @@ COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
 
 # Étape 2: Image finale pour l'application
-FROM php:8.2-fpm-alpine
+FROM php:8.3-fpm-alpine
 
-# Installer les extensions PHP nécessaires
-RUN apk add --no-cache postgresql-dev \
+# Installer les extensions PHP nécessaires et bash pour Render
+RUN apk add --no-cache postgresql-dev bash \
     && docker-php-ext-install pdo pdo_pgsql
 
 # Créer un utilisateur non-root
@@ -28,24 +28,32 @@ COPY --from=composer-build /app/vendor ./vendor
 # Copier le reste du code de l'application
 COPY . .
 
+# Créer le fichier .env si absent (pour Render)
+RUN if [ ! -f .env ]; then cp .env.example .env; fi
+
 # Créer les répertoires nécessaires et définir les permissions
-# Créer les répertoires
 RUN mkdir -p storage/framework/{cache,data,sessions,testing,views} \
     && mkdir -p storage/logs \
     && mkdir -p bootstrap/cache \
     && chown -R laravel:laravel /var/www/html \
     && chmod -R 775 storage bootstrap/cache
 
-
-# Générer la clé d'application et optimiser
-USER laravel
-
 # Copier et rendre exécutable le script de démarrage
 COPY start.sh /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
 
-# Exposer le port 9000
+# Exposer le port 9000 (port par défaut de Render)
 EXPOSE 9000
 
-# Commande par défaut
+# Générer la clé d'application et optimiser pour la production
+USER laravel
+RUN php artisan key:generate --force && \
+    php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan view:cache
+
+USER root
+
+# Commande par défaut pour Render
 CMD ["/usr/local/bin/start.sh"]
+
