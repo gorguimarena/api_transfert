@@ -28,19 +28,17 @@ COPY --from=composer-build /app/vendor ./vendor
 # Copier le reste du code de l'application
 COPY . .
 
-# Créer le fichier .env si absent (pour Render)
-RUN if [ ! -f .env ]; then cp .env.example .env; fi
+# Créer le fichier .env si absent (pour Render) - avant de changer d'utilisateur
+RUN if [ ! -f .env ]; then cp .env.render .env; fi
 
-# Créer les répertoires nécessaires et définir les permissions
+# Créer les répertoires nécessaires et définir les permissions - avant de changer d'utilisateur
 RUN mkdir -p storage/framework/{cache,data,sessions,testing,views} \
     && mkdir -p storage/logs \
     && mkdir -p bootstrap/cache \
     && chown -R laravel:laravel /var/www/html \
     && chmod -R 775 storage bootstrap/cache
 
-# Copier et rendre exécutable le script de démarrage
-COPY start.sh /usr/local/bin/start.sh
-RUN chmod +x /usr/local/bin/start.sh
+USER laravel
 
 # Exposer le port 9000 (port par défaut de Render)
 EXPOSE 9000
