@@ -28,8 +28,11 @@ COPY --from=composer-build /app/vendor ./vendor
 # Copier le reste du code de l'application
 COPY . .
 
-# Créer le fichier .env si absent (pour Render) - avant de changer d'utilisateur
-RUN if [ ! -f .env ]; then cp .env.render .env; fi
+# Créer un fichier .env temporaire simple pour le build
+RUN echo "APP_NAME=Banque Backend" > .env && \
+    echo "APP_ENV=production" >> .env && \
+    echo "APP_DEBUG=false" >> .env && \
+    echo "APP_KEY=" >> .env
 
 # Créer les répertoires nécessaires et définir les permissions - avant de changer d'utilisateur
 RUN mkdir -p storage/framework/{cache,data,sessions,testing,views} \
@@ -38,14 +41,18 @@ RUN mkdir -p storage/framework/{cache,data,sessions,testing,views} \
     && chown -R laravel:laravel /var/www/html \
     && chmod -R 775 storage bootstrap/cache
 
-# Exposer le port 9000 (port par défaut de Render)
-EXPOSE 9000
-
-USER root
-
 # Copier et rendre exécutable le script de démarrage
 COPY start.sh /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
+
+# Générer la clé d'application
+USER laravel
+RUN php artisan key:generate --force
+
+USER root
+
+# Exposer le port 9000 (port par défaut de Render)
+EXPOSE 9000
 
 # Commande par défaut pour Render
 CMD ["/usr/local/bin/start.sh"]
