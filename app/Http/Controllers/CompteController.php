@@ -6,7 +6,9 @@ use App\Models\Compte;
 use App\Models\Client;
 use App\Models\User;
 use App\Helpers\QueryHelper;
+use App\Http\Requests\CreateCompteRequest;
 use App\Http\Requests\StoreCompteRequest;
+use App\Events\CompteCreated;
 use App\Messages;
 use App\ResponseTrait;
 use Illuminate\Http\Request;
@@ -243,19 +245,45 @@ class CompteController extends Controller
      *     )
      * )
      */
-    public function store(StoreCompteRequest $request)
+    public function store(CreateCompteRequest $request)
     {
         try {
             DB::beginTransaction();
 
-            $user = User::findOrFail($request->user_id);
-            $client = $user->client;
+            // Générer un mot de passe temporaire
+            $generatedPassword = $this->generatePassword();
 
+            // Générer un code de vérification
+            $verificationCode = $this->generateVerificationCode();
+
+            // Créer l'utilisateur
+            $user = User::create([
+                'name' => $request->client['nom'] . ' ' . $request->client['prenom'],
+                'email' => $request->client['email'],
+                'password' => Hash::make($generatedPassword),
+                'type' => 'client',
+            ]);
+
+            // Créer le client
+            $client = Client::create([
+                'user_id' => $user->id,
+                'nom' => $request->client['nom'],
+                'prenom' => $request->client['prenom'],
+                'nci' => $request->client['nci'] ?? null,
+                'adresse' => $request->client['adresse'] ?? null,
+                'code_verification' => $verificationCode,
+                'code_utilise' => false,
+            ]);
+
+            // Créer le compte
             $compte = Compte::create([
-                'numero_compte' => $request->numero_compte,
+                'numero_compte' => Compte::generateNumeroCompte(),
                 'type_compte' => $request->type_compte,
-                'status_compte' => $request->status_compte ?? 'active',
+                'status_compte' => 'active',
                 'telephone' => $request->telephone,
+                'devise' => $request->devise ?? 'FCFA',
+                'solde_initial' => $request->soldeInitial,
+                'is_deleted' => false,
                 'client_id' => $client->id,
             ]);
 
@@ -263,12 +291,15 @@ class CompteController extends Controller
 
             $compte->load('client.user');
 
+            // Déclencher l'événement pour envoyer les notifications
+            event(new CompteCreated($compte, $generatedPassword, $verificationCode));
+
             return $this->successResponse($compte, Messages::COMPTE_CREE->value, 201);
 
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return $this->errorResponse(Messages::ERREUR_CREATION_COMPTE->value . ': ' . $e->getMessage());
+            return $this->errorResponse('Erreur lors de la création du compte: ' . $e->getMessage(), 500);
         }
     }
 
@@ -302,5 +333,21 @@ class CompteController extends Controller
     public function destroy(Compte $compte)
     {
         //
+    }
+
+    /**
+     * Génère un mot de passe temporaire
+     */
+    private function generatePassword(): string
+    {
+        return 'Temp' . rand(100000, 999999) . '!';
+    }
+
+    /**
+     * Génère un code de vérification à 6 chiffres
+     */
+    private function generateVerificationCode(): string
+    {
+        return str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
     }
 }

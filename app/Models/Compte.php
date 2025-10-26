@@ -32,6 +32,18 @@ class Compte extends Model
     }
 
     /**
+     * Get the calculated balance attribute
+     * Solde = Somme des opérations de dépôt - Somme des opérations de retrait
+     */
+    public function getSoldeAttribute()
+    {
+        $deposits = $this->transactions()->where('type_transaction', 'depot')->sum('montant');
+        $withdrawals = $this->transactions()->where('type_transaction', 'retrait')->sum('montant');
+
+        return $deposits - $withdrawals;
+    }
+
+    /**
      * Mutateur pour générer automatiquement un numéro de compte
      */
     protected static function booted()

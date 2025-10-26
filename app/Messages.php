@@ -48,4 +48,15 @@ enum Messages: string
     case EMAIL_DOMAINE_POINT = 'Le domaine doit contenir au moins un point. Exemple: gmail.com';
     case EMAIL_ESPACES = 'L\'email ne doit pas contenir d\'espaces.';
     case EMAIL_LONGUEUR = 'L\'email est trop long (maximum 254 caractères).';
+
+    // Messages d'authentification
+    case IDENTIFIANTS_INVALIDES = 'Identifiants invalides';
+    case ERREUR_GENERATION_TOKEN = 'Erreur lors de la génération du token';
+    case CONNEXION_REUSSIE = 'Connexion réussie';
+    case REFRESH_TOKEN_MANQUANT = 'Refresh token manquant';
+    case CONFIGURATION_OAUTH_INVALIDE = 'Configuration OAuth invalide';
+    case REFRESH_TOKEN_INVALIDE = 'Refresh token invalide';
+    case TOKEN_RENOUVELE = 'Token renouvelé avec succès';
+    case UTILISATEUR_NON_AUTHENTIFIE = 'Utilisateur non authentifié';
+    case DECONNEXION_REUSSIE = 'Déconnexion réussie';
 }

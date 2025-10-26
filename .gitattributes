@@ -9,3 +9,7 @@
 /.github export-ignore
 CHANGELOG.md export-ignore
 .styleci.yml export-ignore
+
+app/secrets/oauth/oauth-private.key   binary
+app/secrets/oauth/oauth-public.key    binary
+
