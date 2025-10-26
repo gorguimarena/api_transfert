@@ -28,12 +28,6 @@ COPY --from=composer-build /app/vendor ./vendor
 # Copier le reste du code de l'application
 COPY . .
 
-# Créer un fichier .env temporaire simple pour le build
-RUN echo "APP_NAME=Banque Backend" > .env && \
-    echo "APP_ENV=production" >> .env && \
-    echo "APP_DEBUG=false" >> .env && \
-    echo "APP_KEY=" >> .env
-
 # Créer les répertoires nécessaires et définir les permissions - avant de changer d'utilisateur
 RUN mkdir -p storage/framework/{cache,data,sessions,testing,views} \
     && mkdir -p storage/logs \
