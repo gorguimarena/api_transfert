@@ -278,7 +278,81 @@ class CompteController extends Controller
      */
     public function store(CreateCompteRequest $request)
     {
-        return $this->successResponse(['message' => 'Test endpoint'], 'Test réussi', 200);
+        try {
+            DB::beginTransaction();
+
+            // Vérifier si le client existe déjà
+            $client = null;
+            $generatedPassword = null;
+            $verificationCode = null;
+
+            if ($request->has('client.id') && $request->client['id']) {
+                // Utiliser le client existant
+                $user = User::findOrFail($request->client['id']);
+                $client = $user->client;
+                if (!$client) {
+                    throw new \Exception('Le client associé à cet utilisateur n\'existe pas.');
+                }
+            } else {
+                // Créer un nouveau client
+                // Générer un mot de passe temporaire
+                $generatedPassword = $this->generatePassword();
+
+                // Générer un code de vérification
+                $verificationCode = $this->generateVerificationCode();
+
+                // Parser le titulaire pour extraire nom et prénom
+                $titulaireParts = explode(' ', $request->client['titulaire'], 2);
+                $nom = $titulaireParts[0] ?? '';
+                $prenom = $titulaireParts[1] ?? '';
+
+                // Créer l'utilisateur
+                $user = User::create([
+                    'name' => $request->client['titulaire'],
+                    'email' => $request->client['email'],
+                    'password' => Hash::make($generatedPassword),
+                    'type' => 'client',
+                ]);
+
+                // Créer le client
+                $client = Client::create([
+                    'user_id' => $user->id,
+                    'nom' => $nom,
+                    'prenom' => $prenom,
+                    'nci' => $request->client['nci'] ?? null,
+                    'adresse' => $request->client['adresse'] ?? null,
+                    'code_verification' => $verificationCode,
+                    'code_utilise' => false,
+                ]);
+            }
+
+            // Créer le compte
+            $compte = Compte::create([
+                'numero_compte' => Compte::generateNumeroCompte(),
+                'type_compte' => $request->type,
+                'status_compte' => 'active',
+                'telephone' => $request->client['telephone'],
+                'devise' => $request->devise ?? 'FCFA',
+                'solde_initial' => $request->soldeInitial,
+                'is_deleted' => false,
+                'client_id' => $client->id,
+            ]);
+
+            DB::commit();
+
+            $compte->load('client.user');
+
+            // Déclencher l'événement pour envoyer les notifications seulement si c'est un nouveau client
+            if ($generatedPassword && $verificationCode) {
+                event(new CompteCreated($compte, $generatedPassword, $verificationCode));
+            }
+
+            return $this->successResponse(new CompteResource($compte), Messages::COMPTE_CREE->value, 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return $this->errorResponse('Erreur lors de la création du compte: ' . $e->getMessage(), 500);
+        }
     }
 
     /**

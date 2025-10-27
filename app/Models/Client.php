@@ -41,7 +41,5 @@ class Client extends Model
                 $q->where('type', 'client');
             });
         });
-        static::creating(fn($model) => $model->type = 'client');
-
     }
 }

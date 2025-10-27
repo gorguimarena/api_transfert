@@ -91,7 +91,7 @@ class Compte extends Model
     /**
      * Génère un numéro de compte unique
      */
-    private static function generateNumeroCompte(): string
+    public static function generateNumeroCompte(): string
     {
         do {
             $prefix = now()->format('Ymd');

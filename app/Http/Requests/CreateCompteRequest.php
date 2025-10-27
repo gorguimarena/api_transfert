@@ -40,7 +40,7 @@ class CreateCompteRequest extends FormRequest
             'client.id' => 'nullable|uuid|exists:users,id',
             'client.titulaire' => 'required|string|max:255',
             'client.nci' => ['nullable', new NciRule()],
-            'client.email' => 'required|email',
+            'client.email' => 'required|email|unique:users,email',
             'client.telephone' => ['required', new TelephoneRule()],
             'client.adresse' => 'nullable|string|max:500',
         ];
