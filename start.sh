@@ -1,37 +1,50 @@
 #!/bin/bash
 
-# Check if migrations need to be run
-if php artisan migrate:status | grep -q "Pending"; then
-    echo "Running pending migrations..."
-    php artisan migrate --force
-else
-    echo "No pending migrations found."
+# Install dependencies if vendor directory doesn't exist
+if [ ! -d "vendor" ]; then
+    echo "Installing Composer dependencies..."
+    composer install --no-dev --optimize-autoloader
 fi
 
-# Check if database is empty and run seeders if needed
-if php artisan tinker --execute="echo App\Models\User::count() . PHP_EOL;" | grep -q "^0$"; then
-    echo "Database appears empty, running seeders..."
-    php artisan db:seed --force
-else
-    echo "Database already contains data, skipping seeders."
+# Generate application key if not set
+if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "base64:" ]; then
+    echo "Generating application key..."
+    php artisan key:generate
 fi
 
-# Check if migrations need to be run
-if php artisan migrate:status | grep -q "Pending"; then
-    echo "Running pending migrations..."
-    php artisan migrate --force
-else
-    echo "No pending migrations found."
+# Install Passport keys if they don't exist
+if [ ! -f "app/secrets/oauth/oauth-private.key" ]; then
+    echo "Installing Passport keys..."
+    php artisan passport:install --force
 fi
 
-# Check if database is empty and run seeders if needed
-if php artisan tinker --execute="echo App\Models\User::count() . PHP_EOL;" | grep -q "^0$"; then
-    echo "Database appears empty, running seeders..."
-    php artisan db:seed --force
-else
-    echo "Database already contains data, skipping seeders."
-fi
 
-# Start Laravel development server
-echo "Starting Laravel development server..."
-php artisan serve --host=0.0.0.0 --port=9000
+# Set correct permissions for Passport keys
+echo "Setting correct permissions for Passport keys..."
+chmod 600 app/secrets/oauth/oauth-private.key
+chmod 600 app/secrets/oauth/oauth-public.key
+
+# Run migrations
+echo "Running database migrations..."
+php artisan migrate --force
+
+# Run seeders
+echo "Running database seeders..."
+php artisan db:seed --force
+
+# Generate API documentation
+echo "Generating API documentation..."
+php artisan l5-swagger:generate
+
+# Clear and cache config
+echo "Clearing and caching configuration..."
+php artisan config:clear
+php artisan config:cache
+php artisan route:clear
+php artisan route:cache
+php artisan view:clear
+php artisan view:cache
+
+# Start Laravel server
+echo "Starting Laravel server..."
+php artisan serve --host=0.0.0.0 --port=10000
