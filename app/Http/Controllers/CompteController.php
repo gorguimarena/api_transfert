@@ -22,11 +22,11 @@ use Illuminate\Support\Facades\Hash;
  *     description="API pour la gestion des comptes bancaires"
  * )
  * @OA\Server(
- *     url="http://localhost:8080/api",
+ *     url="http://localhost:9000",
  *     description="Serveur de développement"
  * )
  * @OA\Server(
- *     url="https://api-transfert.onrender.com/api",
+ *     url="https://api-transfert.onrender.com",
  *     description="Serveur de production"
  * )
  *
@@ -101,28 +101,26 @@ class CompteController extends Controller
         'status_compte' => 'status_compte',
     ];
     /**
-     * Lister tous les comptes avec filtres optionnels
-     *
-     * Récupère une liste paginée des comptes bancaires avec filtrage optionnel par numéro de compte, nom d'utilisateur, type et statut
-     *
      * @OA\Get(
      *     path="/api/v1/comptes",
      *     tags={"Comptes"},
      *     summary="Lister tous les comptes avec filtres optionnels",
-     *     security={{"passport":{}}},
+     *     description="Récupère une liste paginée des comptes bancaires avec filtrage optionnel par numéro de compte, nom d'utilisateur, type et statut",
+     *     operationId="listComptes",
+     *     security={{"passport": {}}},
      *     @OA\Parameter(
      *         name="numero_compte",
      *         in="query",
      *         description="Filtrer par numéro de compte (correspondance partielle)",
      *         required=false,
-     *         @OA\Schema(type="string")
+     *         @OA\Schema(type="string", example="20251026")
      *     ),
      *     @OA\Parameter(
      *         name="nom_user",
      *         in="query",
      *         description="Filtrer par nom d'utilisateur (correspondance partielle)",
      *         required=false,
-     *         @OA\Schema(type="string")
+     *         @OA\Schema(type="string", example="John")
      *     ),
      *     @OA\Parameter(
      *         name="type",
@@ -131,7 +129,8 @@ class CompteController extends Controller
      *         required=false,
      *         @OA\Schema(
      *             type="string",
-     *             enum={"epargne", "cheque"}
+     *             enum={"epargne", "cheque"},
+     *             example="cheque"
      *         )
      *     ),
      *     @OA\Parameter(
@@ -141,7 +140,8 @@ class CompteController extends Controller
      *         required=false,
      *         @OA\Schema(
      *             type="string",
-     *             enum={"active", "bloque"}
+     *             enum={"active", "bloque"},
+     *             example="active"
      *         )
      *     ),
      *     @OA\Parameter(
@@ -152,7 +152,8 @@ class CompteController extends Controller
      *         @OA\Schema(
      *             type="string",
      *             enum={"dateCreation", "numero_compte", "type_compte", "status_compte"},
-     *             default="dateCreation"
+     *             default="dateCreation",
+     *             example="dateCreation"
      *         )
      *     ),
      *     @OA\Parameter(
@@ -163,7 +164,8 @@ class CompteController extends Controller
      *         @OA\Schema(
      *             type="string",
      *             enum={"asc", "desc"},
-     *             default="desc"
+     *             default="desc",
+     *             example="desc"
      *         )
      *     ),
      *     @OA\Parameter(
@@ -171,26 +173,29 @@ class CompteController extends Controller
      *         in="query",
      *         description="Nombre d'éléments par page",
      *         required=false,
-     *         @OA\Schema(type="integer", default=10)
+     *         @OA\Schema(type="integer", default=10, minimum=1, maximum=100, example=10)
      *     ),
      *     @OA\Parameter(
      *         name="page",
      *         in="query",
      *         description="Numéro de page",
      *         required=false,
-     *         @OA\Schema(type="integer", default=1)
+     *         @OA\Schema(type="integer", default=1, minimum=1, example=1)
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Opération réussie",
+     *         description="Liste des comptes récupérée avec succès",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Comptes récupérés avec succès"),
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="current_page", type="integer"),
+     *                 @OA\Property(property="current_page", type="integer", example=1),
      *                 @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Compte")),
-     *                 @OA\Property(property="total", type="integer"),
-     *                 @OA\Property(property="per_page", type="integer")
+     *                 @OA\Property(property="total", type="integer", example=7),
+     *                 @OA\Property(property="per_page", type="integer", example=10),
+     *                 @OA\Property(property="last_page", type="integer", example=1),
+     *                 @OA\Property(property="from", type="integer", example=1),
+     *                 @OA\Property(property="to", type="integer", example=7)
      *             )
      *         )
      *     ),
@@ -199,7 +204,16 @@ class CompteController extends Controller
      *         description="Non authentifié",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Non authentifié")
+     *             @OA\Property(property="message", type="string", example="Utilisateur non authentifié")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Erreur de validation des paramètres",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Erreur de validation"),
+     *             @OA\Property(property="errors", type="object")
      *         )
      *     )
      * )

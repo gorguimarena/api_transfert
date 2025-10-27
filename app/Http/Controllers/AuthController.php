@@ -17,21 +17,20 @@ class AuthController extends Controller
     use ResponseTrait;
 
     /**
-     * Authentifier un utilisateur
-     *
-     * Authentification d'un utilisateur et génération des tokens d'accès
-     *
      * @OA\Post(
      *     path="/api/v1/auth/login",
      *     tags={"Authentification"},
      *     summary="Connexion utilisateur",
+     *     description="Authentification d'un utilisateur et génération des tokens d'accès OAuth2",
+     *     operationId="loginUser",
      *     @OA\RequestBody(
      *         required=true,
+     *         description="Informations de connexion",
      *         @OA\JsonContent(
      *             required={"email", "password"},
-     *             @OA\Property(property="email", type="string", format="email", example="admin@example.com"),
-     *             @OA\Property(property="password", type="string", example="password"),
-     *             @OA\Property(property="remember", type="boolean", example=true)
+     *             @OA\Property(property="email", type="string", format="email", example="admin@example.com", description="Adresse email de l'utilisateur"),
+     *             @OA\Property(property="password", type="string", example="password", description="Mot de passe de l'utilisateur"),
+     *             @OA\Property(property="remember", type="boolean", example=true, description="Se souvenir de la connexion")
      *         )
      *     ),
      *     @OA\Response(
@@ -42,10 +41,10 @@ class AuthController extends Controller
      *             @OA\Property(property="message", type="string", example="Connexion réussie"),
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="user", ref="#/components/schemas/User"),
-     *                 @OA\Property(property="access_token", type="string"),
+     *                 @OA\Property(property="access_token", type="string", description="Token d'accès JWT"),
      *                 @OA\Property(property="token_type", type="string", example="Bearer"),
-     *                 @OA\Property(property="expires_in", type="integer"),
-     *                 @OA\Property(property="refresh_token", type="string")
+     *                 @OA\Property(property="expires_in", type="integer", description="Durée de validité en secondes"),
+     *                 @OA\Property(property="refresh_token", type="string", description="Token de rafraîchissement")
      *             )
      *         )
      *     ),
@@ -55,6 +54,15 @@ class AuthController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Identifiants invalides")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Erreur de validation",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Erreur de validation"),
+     *             @OA\Property(property="errors", type="object")
      *         )
      *     )
      * )
