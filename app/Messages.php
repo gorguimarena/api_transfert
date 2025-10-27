@@ -40,6 +40,22 @@ enum Messages: string
     case TELEPHONE_LONGUEUR = 'Le numéro de téléphone doit contenir exactement 9 chiffres après +221.';
     case TELEPHONE_PREFIXE = 'Le numéro de téléphone doit commencer par 77, 78, 70, 75 ou 76.';
 
+    // Messages pour NCI
+    case NCI_OBLIGATOIRE = 'Le numéro de carte d\'identité nationale est obligatoire.';
+    case NCI_FORMAT_INVALIDE = 'Le format du numéro de carte d\'identité nationale est invalide.';
+    case NCI_DEJA_EXISTE = 'Ce numéro de carte d\'identité nationale existe déjà.';
+
+    // Messages pour les comptes
+    case SOLDE_INITIAL_OBLIGATOIRE = 'Le solde initial est obligatoire';
+    case SOLDE_INITIAL_NUMERIC = 'Le solde initial doit être un nombre';
+    case SOLDE_INITIAL_MIN = 'Le solde initial doit être supérieur ou égal à 0';
+    case CLIENT_OBLIGATOIRE = 'Les informations du client sont obligatoires';
+    case CLIENT_ARRAY = 'Les informations du client doivent être un objet';
+    case EMAIL_VALIDE = 'L\'email doit être une adresse email valide';
+    case EMAIL_UNIQUE = 'Cet email est déjà utilisé';
+    case ADRESSE_STRING = 'L\'adresse doit être une chaîne de caractères';
+    case ADRESSE_MAX = 'L\'adresse ne peut pas dépasser 500 caractères';
+
     case EMAIL_STRING = 'L\'email doit être une chaîne de caractères.';
     case EMAIL_AROBASE = 'L\'email doit contenir le caractère @.';
     case EMAIL_AROBASE_UNIQUE = 'L\'email ne doit contenir qu\'un seul caractère @.';

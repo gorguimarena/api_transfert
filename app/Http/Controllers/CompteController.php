@@ -7,7 +7,6 @@ use App\Models\Client;
 use App\Models\User;
 use App\Helpers\QueryHelper;
 use App\Http\Requests\CreateCompteRequest;
-use App\Http\Requests\StoreCompteRequest;
 use App\Http\Resources\CompteResource;
 use App\Events\CompteCreated;
 use App\Messages;
