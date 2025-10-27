@@ -301,7 +301,6 @@ class CompteController extends Controller
         try {
             DB::beginTransaction();
 
-            // Vérifier si le client existe déjà
             $client = null;
             $generatedPassword = null;
             $verificationCode = null;
@@ -314,8 +313,7 @@ class CompteController extends Controller
                     throw new \Exception('Le client associé à cet utilisateur n\'existe pas.');
                 }
             } else {
-                // Créer un nouveau client
-                // Générer un mot de passe temporaire
+                
                 $generatedPassword = $this->generatePassword();
 
                 // Générer un code de vérification

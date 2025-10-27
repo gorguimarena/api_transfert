@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\Auth\LoginResource;
-use App\Http\Resources\Auth\UserResource;
 use App\Messages;
 use App\Models\User;
 use App\ResponseTrait;
@@ -11,7 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Laravel\Passport\Client;
 
 class AuthController extends Controller
 {
