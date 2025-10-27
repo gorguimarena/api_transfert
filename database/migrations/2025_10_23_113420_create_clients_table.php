@@ -14,6 +14,12 @@ return new class extends Migration
         Schema::create('clients', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('user_id')->references('id')->on('users');
+            $table->string('nom')->nullable();
+            $table->string('prenom')->nullable();
+            $table->string('nci')->nullable();
+            $table->text('adresse')->nullable();
+            $table->string('code_verification')->nullable();
+            $table->boolean('code_utilise')->default(false);
             $table->timestamps();
             $table->index('user_id');
         });

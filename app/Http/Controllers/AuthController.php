@@ -17,11 +17,14 @@ class AuthController extends Controller
     use ResponseTrait;
 
     /**
+     * Authentifier un utilisateur
+     *
+     * Authentification d'un utilisateur et génération des tokens d'accès
+     *
      * @OA\Post(
      *     path="/api/v1/auth/login",
      *     tags={"Authentification"},
      *     summary="Connexion utilisateur",
-     *     description="Authentification d'un utilisateur et génération des tokens d'accès",
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -115,11 +118,14 @@ class AuthController extends Controller
     }
 
     /**
+     * Rafraîchir le token d'accès
+     *
+     * Utilise le refresh token pour générer un nouveau token d'accès
+     *
      * @OA\Post(
      *     path="/api/v1/auth/refresh",
      *     tags={"Authentification"},
      *     summary="Rafraîchir le token d'accès",
-     *     description="Utilise le refresh token pour générer un nouveau token d'accès",
      *     @OA\Response(
      *         response=200,
      *         description="Token rafraîchi",
@@ -245,11 +251,14 @@ class AuthController extends Controller
     }
 
     /**
+     * Récupérer les informations de l'utilisateur connecté
+     *
+     * Récupère les informations de l'utilisateur actuellement connecté
+     *
      * @OA\Get(
      *     path="/api/v1/auth/user",
      *     tags={"Authentification"},
      *     summary="Informations utilisateur connecté",
-     *     description="Récupère les informations de l'utilisateur actuellement connecté",
      *     security={{"passport":{}}},
      *     @OA\Response(
      *         response=200,

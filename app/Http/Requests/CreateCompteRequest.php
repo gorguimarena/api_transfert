@@ -14,7 +14,15 @@ class CreateCompteRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true; // L'autorisation est gérée par les middlewares et scopes
+        return auth('api')->check() && auth('api')->user()->type === 'admin';
+    }
+
+    /**
+     * Get the error messages for the defined validation rules.
+     */
+    public function failedAuthorization()
+    {
+        throw new \Illuminate\Auth\Access\AuthorizationException('Seul un administrateur peut créer des comptes');
     }
 
     /**
@@ -24,18 +32,20 @@ class CreateCompteRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'type_compte' => 'required|in:epargne,cheque',
+        $rules = [
+            'type' => 'required|in:epargne,cheque',
             'devise' => 'nullable|string|in:FCFA,EUR,USD',
             'soldeInitial' => 'required|numeric|min:0',
-            'telephone' => ['required', new TelephoneRule()],
             'client' => 'required|array',
-            'client.nom' => 'required|string|max:255',
-            'client.prenom' => 'required|string|max:255',
-            'client.email' => 'required|email|unique:users,email',
+            'client.id' => 'nullable|uuid|exists:users,id',
+            'client.titulaire' => 'required|string|max:255',
             'client.nci' => ['nullable', new NciRule()],
+            'client.email' => 'required|email',
+            'client.telephone' => ['required', new TelephoneRule()],
             'client.adresse' => 'nullable|string|max:500',
         ];
+
+        return $rules;
     }
 
     /**
@@ -71,12 +81,12 @@ class CreateCompteRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'type_compte' => 'type de compte',
+            'type' => 'type de compte',
             'soldeInitial' => 'solde initial',
-            'client.nom' => 'nom du client',
-            'client.prenom' => 'prénom du client',
+            'client.titulaire' => 'titulaire du compte',
             'client.email' => 'email du client',
             'client.nci' => 'numéro de carte d\'identité',
+            'client.telephone' => 'téléphone du client',
             'client.adresse' => 'adresse du client',
         ];
     }

@@ -60,6 +60,35 @@ class Compte extends Model
     }
 
     /**
+     * Scope pour les comptes actifs (non supprimés, statut actif, type cheque ou epargne)
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('status_compte', 'active')
+                    ->whereIn('type_compte', ['cheque', 'epargne']);
+    }
+
+    /**
+     * Scope pour filtrer les comptes selon le type d'utilisateur
+     */
+    public function scopeForUser($query)
+    {
+        $user = auth('api')->user();
+        // Si c'est un client, filtrer seulement ses comptes
+        if ($user->type === 'client') {
+            $client = $user->client;
+            if (!$client) {
+                // Retourner une requête qui ne retourne rien si le client n'existe pas
+                return $query->where('id', null);
+            }
+            $query->where('client_id', $client->id);
+        }
+        // Si c'est un admin, pas de filtre supplémentaire (voit tous les comptes)
+
+        return $query;
+    }
+
+    /**
      * Génère un numéro de compte unique
      */
     private static function generateNumeroCompte(): string

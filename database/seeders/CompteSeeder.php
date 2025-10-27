@@ -34,9 +34,10 @@ class CompteSeeder extends Seeder
                 Compte::create([
                     'numero_compte' => $numero,
                     'type_compte' => ['epargne', 'cheque'][rand(0, 1)],
-                    'status_compte' => ['active', 'bloque'][rand(0, 1)],
+                    'status_compte' => 'active', // Force active pour que les comptes soient visibles
                     'telephone' => '+221' . rand(771234567, 789876543),
                     'client_id' => $client->id,
+                    'is_deleted' => false,
                 ]);
             }
         }

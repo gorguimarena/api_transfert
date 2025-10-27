@@ -14,14 +14,14 @@ return new class extends Migration
         Schema::create('transactions', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->decimal('montant', 15, 2);
-            $table->enum('type_transaction', ['credit', 'debit']);
+            $table->enum('type_transaction', ['depot', 'retrait']);
             $table->foreignUuid('compte_id')->references('id')->on('comptes')->onDelete('cascade');
             $table->timestamps();
 
             $table->index('compte_id');
             $table->index('type_transaction');
-            $table->index('created_at'); 
-            $table->index(['compte_id', 'created_at']); 
+            $table->index('created_at');
+            $table->index(['compte_id', 'created_at']);
         });
     }
 

@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Helpers\QueryHelper;
 use App\Http\Requests\CreateCompteRequest;
 use App\Http\Requests\StoreCompteRequest;
+use App\Http\Resources\CompteResource;
 use App\Events\CompteCreated;
 use App\Messages;
 use App\ResponseTrait;
@@ -70,42 +71,46 @@ class CompteController extends Controller
 
     // Configuration des filtres
     protected $filters = [
-            [
-                'field' => 'numero_compte',
-                'operator' => 'like',
-                'type' => 'like',
-                'request_key' => 'numero_compte'
-            ],
-            [
-                'field' => 'name',
-                'relation' => 'client.user',
-                'operator' => 'like',
-                'type' => 'like',
-                'request_key' => 'nom_user'
-            ],
-            [
-                'field' => 'type_compte',
-                'request_key' => 'type'
-            ],
-            [
-                'field' => 'status_compte',
-                'request_key' => 'statut'
-            ]
-        ];
+        [
+            'field' => 'numero_compte',
+            'operator' => 'like',
+            'type' => 'like',
+            'request_key' => 'numero_compte'
+        ],
+        [
+            'field' => 'name',
+            'relation' => 'client.user',
+            'operator' => 'like',
+            'type' => 'like',
+            'request_key' => 'nom_user'
+        ],
+        [
+            'field' => 'type_compte',
+            'request_key' => 'type'
+        ],
+        [
+            'field' => 'status_compte',
+            'request_key' => 'statut'
+        ]
+    ];
 
-        // Mapping des champs de tri
-        protected $sortMapping = [
-            'dateCreation' => 'created_at',
-            'numero_compte' => 'numero_compte',
-            'type_compte' => 'type_compte',
-            'status_compte' => 'status_compte',
-        ];
+    // Mapping des champs de tri
+    protected $sortMapping = [
+        'dateCreation' => 'created_at',
+        'numero_compte' => 'numero_compte',
+        'type_compte' => 'type_compte',
+        'status_compte' => 'status_compte',
+    ];
     /**
+     * Lister tous les comptes avec filtres optionnels
+     *
+     * Récupère une liste paginée des comptes bancaires avec filtrage optionnel par numéro de compte, nom d'utilisateur, type et statut
+     *
      * @OA\Get(
-     *     path="/api/V1/comptes",
+     *     path="/api/v1/comptes",
      *     tags={"Comptes"},
      *     summary="Lister tous les comptes avec filtres optionnels",
-     *     description="Récupère une liste paginée des comptes bancaires avec filtrage optionnel par numéro de compte, nom d'utilisateur, type et statut",
+     *     security={{"passport":{}}},
      *     @OA\Parameter(
      *         name="numero_compte",
      *         in="query",
@@ -189,40 +194,58 @@ class CompteController extends Controller
      *                 @OA\Property(property="per_page", type="integer")
      *             )
      *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Non authentifié")
+     *         )
      *     )
      * )
      */
     public function index(Request $request)
     {
-        $query = Compte::with('client.user');
-        
+        $user = auth('api')->user();
+        $query = Compte::with('client.user')->active()->forUser();
+
         $query = QueryHelper::applyFilters($query, $request, $this->filters);
         $query = QueryHelper::applySorting($query, $request, $this->sortMapping);
 
         $limit = $request->get('limit', 10);
         $comptes = $query->paginate($limit);
 
-        return $this->successResponse($comptes, Messages::COMPTES_RECUPERES->value);
+        $message = $user->type === 'client' ? 'Vos comptes récupérés avec succès' : Messages::COMPTES_RECUPERES->value;
+        return $this->successResponse($comptes, $message);
     }
 
     /**
+     * Créer un nouveau compte bancaire
+     *
+     * Créer un nouveau compte bancaire avec génération automatique de numéro de compte
+     *
      * @OA\Post(
      *     path="/api/v1/comptes",
      *     tags={"Comptes"},
      *     summary="Créer un nouveau compte",
-     *     description="Créer un nouveau compte bancaire. Si user_id est fourni, utilise le client existant. Sinon, crée un nouveau client avec les informations fournies.",
+     *     security={{"passport":{}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"numero_compte", "type_compte", "telephone"},
-     *             @OA\Property(property="numero_compte", type="string", example="123456789"),
-     *             @OA\Property(property="type_compte", type="string", enum={"epargne", "cheque"}, example="epargne"),
-     *             @OA\Property(property="status_compte", type="string", enum={"active", "bloque"}, example="active"),
-     *             @OA\Property(property="telephone", type="string", example="+221771234567"),
-     *             @OA\Property(property="user_id", type="string", format="uuid", description="ID utilisateur existant (optionnel)"),
-     *             @OA\Property(property="client_name", type="string", description="Nom du client (requis si pas de user_id)", example="John Doe"),
-     *             @OA\Property(property="client_email", type="string", format="email", description="Email du client (requis si pas de user_id)", example="john@example.com"),
-     *             @OA\Property(property="client_password", type="string", description="Mot de passe du client (requis si pas de user_id)", example="password123")
+     *             required={"type", "soldeInitial", "client"},
+     *             @OA\Property(property="type", type="string", enum={"epargne", "cheque"}, example="cheque"),
+     *             @OA\Property(property="devise", type="string", enum={"FCFA", "EUR", "USD"}, example="FCFA"),
+     *             @OA\Property(property="soldeInitial", type="number", example=500000),
+     *             @OA\Property(property="client", type="object",
+     *                 required={"titulaire", "email", "telephone"},
+     *                 @OA\Property(property="id", type="string", format="uuid", description="ID utilisateur existant (optionnel)", example=null),
+     *                 @OA\Property(property="titulaire", type="string", example="Hawa BB Wane"),
+     *                 @OA\Property(property="email", type="string", format="email", example="cheikh.sy@example.com"),
+     *                 @OA\Property(property="telephone", type="string", example="+221771234567"),
+     *                 @OA\Property(property="nci", type="string", example=""),
+     *                 @OA\Property(property="adresse", type="string", example="Dakar, Sénégal")
+     *             )
      *         )
      *     ),
      *     @OA\Response(
@@ -242,74 +265,110 @@ class CompteController extends Controller
      *             @OA\Property(property="message", type="string", example="Erreur de validation"),
      *             @OA\Property(property="errors", type="object")
      *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Non authentifié")
+     *         )
      *     )
      * )
      */
     public function store(CreateCompteRequest $request)
     {
-        try {
-            DB::beginTransaction();
-
-            // Générer un mot de passe temporaire
-            $generatedPassword = $this->generatePassword();
-
-            // Générer un code de vérification
-            $verificationCode = $this->generateVerificationCode();
-
-            // Créer l'utilisateur
-            $user = User::create([
-                'name' => $request->client['nom'] . ' ' . $request->client['prenom'],
-                'email' => $request->client['email'],
-                'password' => Hash::make($generatedPassword),
-                'type' => 'client',
-            ]);
-
-            // Créer le client
-            $client = Client::create([
-                'user_id' => $user->id,
-                'nom' => $request->client['nom'],
-                'prenom' => $request->client['prenom'],
-                'nci' => $request->client['nci'] ?? null,
-                'adresse' => $request->client['adresse'] ?? null,
-                'code_verification' => $verificationCode,
-                'code_utilise' => false,
-            ]);
-
-            // Créer le compte
-            $compte = Compte::create([
-                'numero_compte' => Compte::generateNumeroCompte(),
-                'type_compte' => $request->type_compte,
-                'status_compte' => 'active',
-                'telephone' => $request->telephone,
-                'devise' => $request->devise ?? 'FCFA',
-                'solde_initial' => $request->soldeInitial,
-                'is_deleted' => false,
-                'client_id' => $client->id,
-            ]);
-
-            DB::commit();
-
-            $compte->load('client.user');
-
-            // Déclencher l'événement pour envoyer les notifications
-            event(new CompteCreated($compte, $generatedPassword, $verificationCode));
-
-            return $this->successResponse($compte, Messages::COMPTE_CREE->value, 201);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return $this->errorResponse('Erreur lors de la création du compte: ' . $e->getMessage(), 500);
-        }
+        return $this->successResponse(['message' => 'Test endpoint'], 'Test réussi', 200);
     }
 
     /**
-     * Display the specified resource.
+     * @OA\Get(
+     *     path="/api/v1/comptes/{id}",
+     *     tags={"Comptes"},
+     *     summary="Détails d'un compte",
+     *     description="Récupère les détails d'un compte spécifique",
+     *     security={{"passport":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="string", format="uuid")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Opération réussie",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Compte récupéré avec succès"),
+     *             @OA\Property(property="data", ref="#/components/schemas/Compte")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Compte non trouvé",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Compte non trouvé ou inactif")
+     *         )
+     *     )
+     * )
      */
-    public function show(Compte $compte)
+
+    /**
+     * Afficher les détails d'un compte spécifique
+     *
+     * Récupère les détails d'un compte spécifique
+     *
+     * @OA\Get(
+     *     path="/api/v1/comptes/{id}",
+     *     tags={"Comptes"},
+     *     summary="Détails d'un compte",
+     *     security={{"passport":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="string", format="uuid")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Opération réussie",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Compte récupéré avec succès"),
+     *             @OA\Property(property="data", ref="#/components/schemas/Compte")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Compte non trouvé",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Compte non trouvé ou inactif")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Non authentifié")
+     *         )
+     *     )
+     * )
+     */
+    public function show(Request $request, Compte $compte)
     {
-        //
+        // Vérifier que le compte est actif
+        if (!$compte->active()->exists()) {
+            return $this->errorResponse('Compte non trouvé ou inactif', 404);
+        }
+
+        $compte->load('client.user');
+
+        return $this->successResponse(new CompteResource($compte), 'Compte récupéré avec succès');
     }
+
 
     /**
      * Show the form for editing the specified resource.

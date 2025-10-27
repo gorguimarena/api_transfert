@@ -14,6 +14,16 @@ class Client extends Model
     protected $keyType = 'string';
     public $incrementing = false;
 
+    protected $fillable = [
+        'user_id',
+        'nom',
+        'prenom',
+        'nci',
+        'adresse',
+        'code_verification',
+        'code_utilise',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

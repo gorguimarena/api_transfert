@@ -28,8 +28,8 @@ class TransactionSeeder extends Seeder
 
             for ($i = 0; $i < $numTransactions; $i++) {
                 Transaction::create([
-                    'montant' => rand(100, 10000) / 100, 
-                    'type_transaction' => rand(0, 1) ? TypeTransaction::CREDIT : TypeTransaction::DEBIT,
+                    'montant' => rand(100, 10000) / 100,
+                    'type_transaction' => rand(0, 1) ? TypeTransaction::DEPOT : TypeTransaction::RETRAIT,
                     'compte_id' => $compte->id,
                 ]);
             }

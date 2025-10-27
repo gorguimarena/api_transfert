@@ -4,6 +4,6 @@ namespace App;
 
 enum TypeTransaction: string
 {
-    case CREDIT = 'credit';
-    case DEBIT = 'debit';
+    case DEPOT = 'depot';
+    case RETRAIT = 'retrait';
 }

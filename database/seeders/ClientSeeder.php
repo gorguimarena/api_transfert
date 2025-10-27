@@ -49,6 +49,12 @@ class ClientSeeder extends Seeder
             $client = new Client();
             $client->id = (string) Str::uuid();
             $client->user_id = $user->id;
+            $client->nom = explode(' ', $userData['name'])[1] ?? '';
+            $client->prenom = explode(' ', $userData['name'])[0] ?? '';
+            $client->nci = rand(1000000000000, 9999999999999);
+            $client->adresse = 'Dakar, Sénégal';
+            $client->code_verification = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+            $client->code_utilise = false;
             $client->save();
         }
 
