@@ -18,37 +18,6 @@ if [ ! -f "app/secrets/oauth/oauth-private.key" ]; then
     php artisan passport:install --force
 fi
 
-# Toujours créer un nouveau client OAuth Password Grant
-echo "Creating new OAuth password grant client..."
-CLIENT_OUTPUT=$(php artisan passport:client --password --name="Password Grant Client" --provider=users --no-interaction)
-
-echo "$CLIENT_OUTPUT"
-
-# Extraire l'ID et le secret du résultat
-CLIENT_ID=$(echo "$CLIENT_OUTPUT" | grep "Client ID:" | awk '{print $3}')
-CLIENT_SECRET=$(echo "$CLIENT_OUTPUT" | grep "Client secret:" | awk '{print $3}')
-
-# Vérifie si les deux sont trouvés
-if [ -n "$CLIENT_ID" ] && [ -n "$CLIENT_SECRET" ]; then
-    echo ""
-    echo "✅ Nouveau client créé avec succès !"
-    echo "📌 Client ID: $CLIENT_ID"
-    echo "🔐 Client Secret: $CLIENT_SECRET"
-    echo ""
-    echo "⚠️ Copie manuelle requise : ajoute ces valeurs à tes variables Render :"
-    echo "   PASSPORT_PASSWORD_CLIENT_ID=$CLIENT_ID"
-    echo "   PASSPORT_PASSWORD_CLIENT_SECRET=$CLIENT_SECRET"
-
-    # Créer un fichier temporaire avec les credentials pour Render
-    echo "Creating credentials file for Render..."
-    echo "PASSPORT_PASSWORD_CLIENT_ID=$CLIENT_ID" > /tmp/oauth_credentials.txt
-    echo "PASSPORT_PASSWORD_CLIENT_SECRET=$CLIENT_SECRET" >> /tmp/oauth_credentials.txt
-    echo "📄 Fichier /tmp/oauth_credentials.txt créé avec les credentials"
-else
-    echo "❌ Erreur : impossible de récupérer l'ID ou le secret du client."
-fi
-
-
 
 # Set correct permissions for Passport keys
 echo "Setting correct permissions for Passport keys..."

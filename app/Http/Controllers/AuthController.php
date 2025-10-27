@@ -105,6 +105,7 @@ class AuthController extends Controller
                 ]);
             }
 
+            // Générer les tokens via Passport avec la méthode OAuth2 standard
             $tokenRequest = $request->create('/oauth/token', 'POST', [
                 'grant_type' => 'password',
                 'client_id' => $client->id,
