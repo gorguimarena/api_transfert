@@ -32,9 +32,9 @@ services:
           name: laravel_db
           property: password
       - key: PASSPORT_PASSWORD_CLIENT_ID
-        value: 019a2442-2105-73fa-bfd2-854ee5e60a2b
+        generateValue: true
       - key: PASSPORT_PASSWORD_CLIENT_SECRET
-        value: k17ChvjkxTaDvqsiFoFCH8Ua6HUirN6JwyXJenus
+        generateValue: true
 
   - type: pgsql
     name: laravel_db

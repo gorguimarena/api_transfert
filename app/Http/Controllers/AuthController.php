@@ -10,6 +10,7 @@ use App\ResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Laravel\Passport\Client;
 
 class AuthController extends Controller
@@ -89,6 +90,21 @@ class AuthController extends Controller
 
         // Générer les tokens via Passport
         try {
+            // Vérifier que le client OAuth existe
+            $oauthClient = \Laravel\Passport\Client::where('id', $client->id)->first();
+            if (!$oauthClient) {
+                // Créer le client OAuth si nécessaire
+                \Laravel\Passport\Client::create([
+                    'id' => $client->id,
+                    'name' => 'Password Grant Client',
+                    'secret' => $client->secret,
+                    'redirect' => 'http://localhost',
+                    'personal_access_client' => false,
+                    'password_client' => true,
+                    'revoked' => false,
+                ]);
+            }
+
             $tokenRequest = $request->create('/oauth/token', 'POST', [
                 'grant_type' => 'password',
                 'client_id' => $client->id,
@@ -102,9 +118,18 @@ class AuthController extends Controller
             $tokenData = json_decode($tokenResponse->getContent(), true);
 
             if ($tokenResponse->getStatusCode() !== 200) {
+                Log::error('OAuth Token Error', [
+                    'status' => $tokenResponse->getStatusCode(),
+                    'response' => $tokenData,
+                    'client_id' => $client->id
+                ]);
                 return $this->errorResponse(Messages::ERREUR_GENERATION_TOKEN->value . ': ' . ($tokenData['message'] ?? 'Erreur inconnue'), 500);
             }
         } catch (\Exception $e) {
+            Log::error('OAuth Token Exception', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return $this->errorResponse(Messages::ERREUR_GENERATION_TOKEN->value . ': ' . $e->getMessage(), 500);
         }
 
