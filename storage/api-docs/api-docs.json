@@ -7,7 +7,7 @@
     },
     "servers": [
         {
-            "url": "http://localhost:9000",
+            "url": "http://localhost:8080/api",
             "description": "Serveur de développement"
         },
         {
@@ -22,7 +22,7 @@
                     "Authentification"
                 ],
                 "summary": "Connexion utilisateur",
-                "description": "Authentification d'un utilisateur et génération des tokens d'accès",
+                "description": "Authentifier un utilisateur\n\nAuthentification d'un utilisateur et génération des tokens d'accès",
                 "operationId": "5db09a35f965c6ca7529ed3c3cae8e21",
                 "requestBody": {
                     "required": true,
@@ -124,7 +124,7 @@
                     "Authentification"
                 ],
                 "summary": "Rafraîchir le token d'accès",
-                "description": "Utilise le refresh token pour générer un nouveau token d'accès",
+                "description": "Rafraîchir le token d'accès\n\nUtilise le refresh token pour générer un nouveau token d'accès",
                 "operationId": "05bd0482845348cafa4da9e4fb7d0ffb",
                 "responses": {
                     "200": {
@@ -248,7 +248,7 @@
                     "Authentification"
                 ],
                 "summary": "Informations utilisateur connecté",
-                "description": "Récupère les informations de l'utilisateur actuellement connecté",
+                "description": "Récupérer les informations de l'utilisateur connecté\n\nRécupère les informations de l'utilisateur actuellement connecté",
                 "operationId": "c7ced6424ddad77f25a54e6346eb55e4",
                 "responses": {
                     "200": {
@@ -304,7 +304,7 @@
                     "Comptes"
                 ],
                 "summary": "Lister tous les comptes avec filtres optionnels",
-                "description": "Récupère une liste paginée des comptes bancaires avec filtrage optionnel par numéro de compte, nom d'utilisateur, type et statut",
+                "description": "Lister tous les comptes avec filtres optionnels\n\nRécupère une liste paginée des comptes bancaires avec filtrage optionnel par numéro de compte, nom d'utilisateur, type et statut",
                 "operationId": "c09c55b936e3520140768760edfa911e",
                 "parameters": [
                     {
@@ -442,15 +442,40 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Non authentifié"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "passport": []
+                    }
+                ]
             },
             "post": {
                 "tags": [
                     "Comptes"
                 ],
                 "summary": "Créer un nouveau compte",
-                "description": "Créer un nouveau compte bancaire. Si user_id est fourni, utilise le client existant. Sinon, crée un nouveau client avec les informations fournies.",
+                "description": "Créer un nouveau compte bancaire\n\nCréer un nouveau compte bancaire avec génération automatique de numéro de compte",
                 "operationId": "aa399240cc7c1f272aa92fe6d6b4e162",
                 "requestBody": {
                     "required": true,
@@ -458,55 +483,68 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "numero_compte",
-                                    "type_compte",
-                                    "telephone"
+                                    "type",
+                                    "soldeInitial",
+                                    "client"
                                 ],
                                 "properties": {
-                                    "numero_compte": {
-                                        "type": "string",
-                                        "example": "123456789"
-                                    },
-                                    "type_compte": {
+                                    "type": {
                                         "type": "string",
                                         "enum": [
                                             "epargne",
                                             "cheque"
                                         ],
-                                        "example": "epargne"
+                                        "example": "cheque"
                                     },
-                                    "status_compte": {
+                                    "devise": {
                                         "type": "string",
                                         "enum": [
-                                            "active",
-                                            "bloque"
+                                            "FCFA",
+                                            "EUR",
+                                            "USD"
                                         ],
-                                        "example": "active"
+                                        "example": "FCFA"
                                     },
-                                    "telephone": {
-                                        "type": "string",
-                                        "example": "+221771234567"
+                                    "soldeInitial": {
+                                        "type": "number",
+                                        "example": 500000
                                     },
-                                    "user_id": {
-                                        "description": "ID utilisateur existant (optionnel)",
-                                        "type": "string",
-                                        "format": "uuid"
-                                    },
-                                    "client_name": {
-                                        "description": "Nom du client (requis si pas de user_id)",
-                                        "type": "string",
-                                        "example": "John Doe"
-                                    },
-                                    "client_email": {
-                                        "description": "Email du client (requis si pas de user_id)",
-                                        "type": "string",
-                                        "format": "email",
-                                        "example": "john@example.com"
-                                    },
-                                    "client_password": {
-                                        "description": "Mot de passe du client (requis si pas de user_id)",
-                                        "type": "string",
-                                        "example": "password123"
+                                    "client": {
+                                        "required": [
+                                            "titulaire",
+                                            "email",
+                                            "telephone"
+                                        ],
+                                        "properties": {
+                                            "id": {
+                                                "description": "ID utilisateur existant (optionnel)",
+                                                "type": "string",
+                                                "format": "uuid",
+                                                "example": null
+                                            },
+                                            "titulaire": {
+                                                "type": "string",
+                                                "example": "Hawa BB Wane"
+                                            },
+                                            "email": {
+                                                "type": "string",
+                                                "format": "email",
+                                                "example": "cheikh.sy@example.com"
+                                            },
+                                            "telephone": {
+                                                "type": "string",
+                                                "example": "+221771234567"
+                                            },
+                                            "nci": {
+                                                "type": "string",
+                                                "example": ""
+                                            },
+                                            "adresse": {
+                                                "type": "string",
+                                                "example": "Dakar, Sénégal"
+                                            }
+                                        },
+                                        "type": "object"
                                     }
                                 },
                                 "type": "object"
@@ -560,8 +598,124 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Non authentifié"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "passport": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/comptes/{id}": {
+            "get": {
+                "tags": [
+                    "Comptes"
+                ],
+                "summary": "Détails d'un compte",
+                "description": "Afficher les détails d'un compte spécifique\n\nRécupère les détails d'un compte spécifique",
+                "operationId": "eb5f0388e07f74eea9f4a8286c080ad4",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Opération réussie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Compte récupéré avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Compte"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Compte non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Compte non trouvé ou inactif"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Non authentifié"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "passport": []
+                    }
+                ]
             }
         },
         "/oauth/token": {
