@@ -19,7 +19,14 @@ use Illuminate\Support\Facades\Hash;
  * @OA\Info(
  *     title="API de Transfert Bancaire",
  *     version="1.0.0",
- *     description="API pour la gestion des comptes bancaires"
+ *     description="API REST pour la gestion des comptes bancaires avec authentification OAuth2"
+ * )
+ * @OA\SecurityScheme(
+ *     securityScheme="token",
+ *     type="http",
+ *     scheme="bearer",
+ *     bearerFormat="JWT",
+ *     description="Entrer le token JWT au format : Bearer {votre_token}"
  * )
  * @OA\Server(
  *     url="http://localhost:9000",
@@ -106,8 +113,8 @@ class CompteController extends Controller
      *     tags={"Comptes"},
      *     summary="Lister tous les comptes avec filtres optionnels",
      *     description="Récupère une liste paginée des comptes bancaires avec filtrage optionnel par numéro de compte, nom d'utilisateur, type et statut",
+     *     security={{"token":{}}},
      *     operationId="listComptes",
-     *     security={{"passport": {}}},
      *     @OA\Parameter(
      *         name="numero_compte",
      *         in="query",
@@ -230,7 +237,7 @@ class CompteController extends Controller
         $comptes = $query->paginate($limit);
 
         $message = $user->type === 'client' ? 'Vos comptes récupérés avec succès' : Messages::COMPTES_RECUPERES->value;
-        return $this->successResponse($comptes, $message);
+        return $this->successResponse($comptes, $message)->header('Access-Control-Allow-Credentials', 'true');
     }
 
     /**
@@ -242,7 +249,7 @@ class CompteController extends Controller
      *     path="/api/v1/comptes",
      *     tags={"Comptes"},
      *     summary="Créer un nouveau compte",
-     *     security={{"passport":{}}},
+     *     security={{"token":{}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -369,39 +376,6 @@ class CompteController extends Controller
     }
 
     /**
-     * @OA\Get(
-     *     path="/api/v1/comptes/{id}",
-     *     tags={"Comptes"},
-     *     summary="Détails d'un compte",
-     *     description="Récupère les détails d'un compte spécifique",
-     *     security={{"passport":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         @OA\Schema(type="string", format="uuid")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Opération réussie",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Compte récupéré avec succès"),
-     *             @OA\Property(property="data", ref="#/components/schemas/Compte")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Compte non trouvé",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Compte non trouvé ou inactif")
-     *         )
-     *     )
-     * )
-     */
-
-    /**
      * Afficher les détails d'un compte spécifique
      *
      * Récupère les détails d'un compte spécifique
@@ -410,7 +384,7 @@ class CompteController extends Controller
      *     path="/api/v1/comptes/{id}",
      *     tags={"Comptes"},
      *     summary="Détails d'un compte",
-     *     security={{"passport":{}}},
+     *     security={{"token":{}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -453,7 +427,7 @@ class CompteController extends Controller
 
         $compte->load('client.user');
 
-        return $this->successResponse(new CompteResource($compte), 'Compte récupéré avec succès');
+        return $this->successResponse(new CompteResource($compte), 'Compte récupéré avec succès')->header('Access-Control-Allow-Credentials', 'true');
     }
 
 

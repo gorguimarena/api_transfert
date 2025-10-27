@@ -172,51 +172,18 @@ return [
         */
         'securityDefinitions' => [
             'securitySchemes' => [
-                /*
-                 * Examples of Security schemes
-                 */
-                /*
-                'api_key_security_example' => [ // Unique name of security
-                    'type' => 'apiKey', // The type of the security scheme. Valid values are "basic", "apiKey" or "oauth2".
-                    'description' => 'A short description for security scheme',
-                    'name' => 'api_key', // The name of the header or query parameter to be used.
-                    'in' => 'header', // The location of the API key. Valid values are "query" or "header".
-                ],
-                'oauth2_security_example' => [ // Unique name of security
-                    'type' => 'oauth2', // The type of the security scheme. Valid values are "basic", "apiKey" or "oauth2".
-                    'description' => 'A short description for oauth2 security scheme.',
-                    'flow' => 'implicit', // The flow used by the OAuth2 security scheme. Valid values are "implicit", "password", "application" or "accessCode".
-                    'authorizationUrl' => 'http://example.com/auth', // The authorization URL to be used for (implicit/accessCode)
-                    //'tokenUrl' => 'http://example.com/auth' // The authorization URL to be used for (password/application/accessCode)
-                    'scopes' => [
-                        'read:projects' => 'read your projects',
-                        'write:projects' => 'modify projects in your account',
-                    ]
-                ],
-                */
-
-                'passport' => [ // Unique name of security
-                    'type' => 'oauth2', // The type of the security scheme. Valid values are "basic", "apiKey" or "oauth2".
-                    'description' => 'Authentification OAuth2 avec Laravel Passport. Utilisez le endpoint /api/v1/auth/login pour obtenir un token.',
-                    'flows' => [
-                        'password' => [
-                            'tokenUrl' => env('APP_URL', 'http://localhost:9000') . '/oauth/token',
-                            'scopes' => [
-                                '*' => 'Accès complet à l\'API'
-                            ]
-                        ],
-                    ],
-                ],
-                'bearerAuth' => [
+                'token' => [
                     'type' => 'http',
-                    'scheme' => 'bearer',
-                    'description' => 'Token JWT obtenu via l\'authentification OAuth2. Format: Bearer {token}'
+                    'bearerFormat' => 'JWT',
+                    'scheme' => 'Bearer',
+                    'in' => 'header',
+                    'name' => 'Authorization',
+                    'description' => 'Token JWT obtenu via l\'authentification OAuth2. Format: Bearer {token}. Pour obtenir un token, utilisez l\'endpoint POST /api/v1/auth/login avec vos identifiants.'
                 ],
             ],
             'security' => [
                 [
-                    'passport' => ['*'],
-                    'bearerAuth' => []
+                    'token' => []
                 ],
             ],
         ],
@@ -287,6 +254,11 @@ return [
                  * If set to true, it persists authorization data, and it would not be lost on browser close/refresh
                  */
                 'persist_authorization' => env('L5_SWAGGER_UI_PERSIST_AUTHORIZATION', true),
+
+                /*
+                 * If set to true, Swagger UI will try to send the authorization header with each request
+                 */
+                'with_credentials_in_headers' => true,
 
                 'oauth2' => [
                     /*

@@ -23,6 +23,7 @@ class AuthController extends Controller
      *     tags={"Authentification"},
      *     summary="Connexion utilisateur",
      *     description="Authentification d'un utilisateur et génération des tokens d'accès OAuth2",
+     *     security={{"passport":{}}},
      *     operationId="loginUser",
      *     @OA\RequestBody(
      *         required=true,
@@ -148,7 +149,7 @@ class AuthController extends Controller
         return $this->successResponse(
             new LoginResource($user, $tokenData),
             Messages::CONNEXION_REUSSIE->value
-        )->withCookie($cookie);
+        )->withCookie($cookie)->header('Access-Control-Allow-Credentials', 'true');
     }
 
     /**
@@ -160,6 +161,7 @@ class AuthController extends Controller
      *     path="/api/v1/auth/refresh",
      *     tags={"Authentification"},
      *     summary="Rafraîchir le token d'accès",
+     *     security={{"token":{}}},
      *     @OA\Response(
      *         response=200,
      *         description="Token rafraîchi",
@@ -239,7 +241,7 @@ class AuthController extends Controller
             'access_token' => $tokenData['access_token'],
             'token_type' => $tokenData['token_type'],
             'expires_in' => $tokenData['expires_in']
-        ], Messages::TOKEN_RENOUVELE->value)->withCookie($cookie);
+        ], Messages::TOKEN_RENOUVELE->value)->withCookie($cookie)->header('Access-Control-Allow-Credentials', 'true');
     }
 
     /**
@@ -248,7 +250,7 @@ class AuthController extends Controller
      *     tags={"Authentification"},
      *     summary="Déconnexion utilisateur",
      *     description="Invalide le token d'accès actuel et supprime le refresh token",
-     *     security={{"passport":{}}},
+     *     security={{"token":{}}},
      *     @OA\Response(
      *         response=200,
      *         description="Déconnexion réussie",
@@ -281,45 +283,7 @@ class AuthController extends Controller
         // Supprimer le cookie refresh token
         $cookie = Cookie::forget('refresh_token');
 
-        return $this->successResponse(null, Messages::DECONNEXION_REUSSIE->value)->withCookie($cookie);
+        return $this->successResponse(null, Messages::DECONNEXION_REUSSIE->value)->withCookie($cookie)->header('Access-Control-Allow-Credentials', 'true');
     }
 
-    /**
-     * Récupérer les informations de l'utilisateur connecté
-     *
-     * Récupère les informations de l'utilisateur actuellement connecté
-     *
-     * @OA\Get(
-     *     path="/api/v1/auth/user",
-     *     tags={"Authentification"},
-     *     summary="Informations utilisateur connecté",
-     *     security={{"passport":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Informations utilisateur",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", ref="#/components/schemas/User")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Non authentifié",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Non authentifié")
-     *         )
-     *     )
-     * )
-     */
-    public function user(Request $request)
-    {
-        $user = auth('api')->user();
-
-        if (!$user) {
-            return $this->errorResponse(Messages::UTILISATEUR_NON_AUTHENTIFIE->value, 401);
-        }
-
-        return $this->successResponse(new UserResource($user));
-    }
 }
