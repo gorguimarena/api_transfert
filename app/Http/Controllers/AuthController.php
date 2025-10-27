@@ -93,14 +93,14 @@ class AuthController extends Controller
             // Vérifier que le client OAuth existe
             $oauthClient = \Laravel\Passport\Client::where('id', $client->id)->first();
             if (!$oauthClient) {
-                // Créer le client OAuth si nécessaire
+                // Créer le client OAuth si nécessaire avec les bonnes colonnes
                 \Laravel\Passport\Client::create([
                     'id' => $client->id,
                     'name' => 'Password Grant Client',
                     'secret' => $client->secret,
-                    'redirect' => 'http://localhost',
-                    'personal_access_client' => false,
-                    'password_client' => true,
+                    'provider' => 'users',
+                    'redirect_uris' => 'http://localhost',
+                    'grant_types' => 'password',
                     'revoked' => false,
                 ]);
             }

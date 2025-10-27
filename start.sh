@@ -38,6 +38,12 @@ if [ -n "$CLIENT_ID" ] && [ -n "$CLIENT_SECRET" ]; then
     echo "⚠️ Copie manuelle requise : ajoute ces valeurs à tes variables Render :"
     echo "   PASSPORT_PASSWORD_CLIENT_ID=$CLIENT_ID"
     echo "   PASSPORT_PASSWORD_CLIENT_SECRET=$CLIENT_SECRET"
+
+    # Créer un fichier temporaire avec les credentials pour Render
+    echo "Creating credentials file for Render..."
+    echo "PASSPORT_PASSWORD_CLIENT_ID=$CLIENT_ID" > /tmp/oauth_credentials.txt
+    echo "PASSPORT_PASSWORD_CLIENT_SECRET=$CLIENT_SECRET" >> /tmp/oauth_credentials.txt
+    echo "📄 Fichier /tmp/oauth_credentials.txt créé avec les credentials"
 else
     echo "❌ Erreur : impossible de récupérer l'ID ou le secret du client."
 fi
