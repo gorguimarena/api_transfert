@@ -14,6 +14,8 @@ use App\ResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Requests\BloquerCompteRequest;
+
 
 /**
  * @OA\Info(
@@ -466,7 +468,7 @@ class CompteController extends Controller
      */
     public function edit(Compte $compte)
     {
-        //
+        
     }
 
     /**
@@ -483,6 +485,92 @@ class CompteController extends Controller
     public function destroy(Compte $compte)
     {
         //
+    }
+
+    /**
+     * Bloquer un compte bancaire
+     *
+     * Bloque un compte bancaire avec une raison et une durée optionnelle
+     *
+     * @OA\Post(
+     *     path="/api/v1/comptes/{compteId}/bloquer",
+     *     tags={"Comptes"},
+     *     summary="Bloquer un compte",
+     *     security={{"token":{}}},
+     *     @OA\Parameter(
+     *         name="compteId",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="string", format="uuid")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"block_reason"},
+     *             @OA\Property(property="block_reason", type="string", example="Suspicion de fraude", maxLength=500),
+     *             @OA\Property(property="block_duration_days", type="integer", example=30, minimum=1, maximum=365)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Compte bloqué avec succès",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Compte bloqué avec succès"),
+     *             @OA\Property(property="data", ref="#/components/schemas/Compte")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Accès refusé - Seuls les admins peuvent bloquer des comptes",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Accès refusé")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Compte non trouvé",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Compte non trouvé")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Erreur de validation",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Erreur de validation"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     )
+     * )
+     */
+    public function bloquer(BloquerCompteRequest $request, Compte $compte)
+    {
+        // Vérifier que le compte existe et n'est pas déjà bloqué
+        if ($compte->status_compte === 'bloque') {
+            return $this->errorResponse('Le compte est déjà bloqué', 422);
+        }
+
+        // Calculer la date de fin de blocage si une durée est spécifiée
+        $blockEndDate = null;
+        if ($request->has('block_duration_days') && $request->block_duration_days) {
+            $blockEndDate = now()->addDays($request->block_duration_days);
+        }
+
+        // Bloquer le compte
+        $compte->update([
+            'status_compte' => 'bloque',
+            'blocked_at' => now(),
+            'block_end_date' => $blockEndDate,
+            'block_reason' => $request->block_reason,
+        ]);
+
+        $compte->load('client.user');
+
+        return $this->successResponse(new CompteResource($compte), 'Compte bloqué avec succès');
     }
 
     /**
