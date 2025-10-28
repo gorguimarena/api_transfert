@@ -75,4 +75,9 @@ enum Messages: string
     case TOKEN_RENOUVELE = 'Token renouvelé avec succès';
     case UTILISATEUR_NON_AUTHENTIFIE = 'Utilisateur non authentifié';
     case DECONNEXION_REUSSIE = 'Déconnexion réussie';
+
+    // Messages de validation pour l'authentification
+    case REMEMBER_BOOLEAN = 'Le champ remember doit être un booléen';
+    case ERREUR_VALIDATION = 'Erreur de validation';
+    case ERREUR_REVOCATION_TOKEN = 'Erreur lors de la deconnexion';
 }

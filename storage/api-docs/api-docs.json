@@ -74,23 +74,16 @@
                                         },
                                         "data": {
                                             "properties": {
-                                                "user": {
-                                                    "$ref": "#/components/schemas/User"
-                                                },
                                                 "access_token": {
-                                                    "description": "Token d'accès JWT",
+                                                    "description": "Token d'accès JWT (expire en 1 heure)",
                                                     "type": "string"
                                                 },
-                                                "token_type": {
-                                                    "type": "string",
-                                                    "example": "Bearer"
-                                                },
                                                 "expires_in": {
-                                                    "description": "Durée de validité en secondes",
+                                                    "description": "Durée de validité en secondes (3600)",
                                                     "type": "integer"
                                                 },
                                                 "refresh_token": {
-                                                    "description": "Token de rafraîchissement",
+                                                    "description": "Token de rafraîchissement (expire en 30 jours, stocké en cookie sécurisé)",
                                                     "type": "string"
                                                 }
                                             },
@@ -179,14 +172,16 @@
                                         "data": {
                                             "properties": {
                                                 "access_token": {
+                                                    "description": "Nouveau token d'accès JWT",
                                                     "type": "string"
                                                 },
-                                                "token_type": {
-                                                    "type": "string",
-                                                    "example": "Bearer"
-                                                },
                                                 "expires_in": {
+                                                    "description": "Durée de validité en secondes",
                                                     "type": "integer"
+                                                },
+                                                "refresh_token": {
+                                                    "description": "Nouveau token de rafraîchissement",
+                                                    "type": "string"
                                                 }
                                             },
                                             "type": "object"
@@ -762,6 +757,146 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Non authentifié"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "token": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/comptes/{compteId}/bloquer": {
+            "post": {
+                "tags": [
+                    "Comptes"
+                ],
+                "summary": "Bloquer un compte",
+                "description": "Bloquer un compte bancaire\n\nBloque un compte bancaire avec une raison et une durée optionnelle",
+                "operationId": "fe2f6141c450b39f7be6854c72d7fb95",
+                "parameters": [
+                    {
+                        "name": "compteId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "block_reason"
+                                ],
+                                "properties": {
+                                    "block_reason": {
+                                        "type": "string",
+                                        "maxLength": 500,
+                                        "example": "Suspicion de fraude"
+                                    },
+                                    "block_duration_days": {
+                                        "type": "integer",
+                                        "maximum": 365,
+                                        "minimum": 1,
+                                        "example": 30
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Compte bloqué avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Compte bloqué avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Compte"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Accès refusé - Seuls les admins peuvent bloquer des comptes",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Accès refusé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Compte non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Compte non trouvé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erreur de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur de validation"
+                                        },
+                                        "errors": {
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
