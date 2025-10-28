@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AuthRequest;
 use App\Http\Resources\Auth\LoginResource;
 use App\Messages;
 use App\Models\User;
@@ -40,11 +41,9 @@ class AuthController extends Controller
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Connexion réussie"),
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="user", ref="#/components/schemas/User"),
-     *                 @OA\Property(property="access_token", type="string", description="Token d'accès JWT"),
-     *                 @OA\Property(property="token_type", type="string", example="Bearer"),
-     *                 @OA\Property(property="expires_in", type="integer", description="Durée de validité en secondes"),
-     *                 @OA\Property(property="refresh_token", type="string", description="Token de rafraîchissement")
+     *                 @OA\Property(property="access_token", type="string", description="Token d'accès JWT (expire en 1 heure)"),
+     *                 @OA\Property(property="expires_in", type="integer", description="Durée de validité en secondes (3600)"),
+     *                 @OA\Property(property="refresh_token", type="string", description="Token de rafraîchissement (expire en 30 jours, stocké en cookie sécurisé)")
      *             )
      *         )
      *     ),
@@ -67,13 +66,8 @@ class AuthController extends Controller
      *     )
      * )
      */
-    public function login(Request $request)
+    public function login(AuthRequest $request)
     {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string',
-            'remember' => 'boolean'
-        ]);
 
         $user = User::where('email', $request->email)->first();
 
@@ -81,13 +75,11 @@ class AuthController extends Controller
             return $this->errorResponse(Messages::IDENTIFIANTS_INVALIDES->value, 401);
         }
 
-        // Utiliser les credentials du client password grant créé
         $client = (object) [
             'id' =>  env('PASSPORT_PASSWORD_CLIENT_ID'),
             'secret' => env('PASSPORT_PASSWORD_CLIENT_SECRET')
         ];
 
-        // Générer les tokens via Passport
         try {
             // Vérifier que le client OAuth existe
             $oauthClient = \Laravel\Passport\Client::where('id', $client->id)->first();
@@ -167,9 +159,9 @@ class AuthController extends Controller
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Token rafraîchi"),
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="access_token", type="string"),
-     *                 @OA\Property(property="token_type", type="string", example="Bearer"),
-     *                 @OA\Property(property="expires_in", type="integer")
+     *                 @OA\Property(property="access_token", type="string", description="Nouveau token d'accès JWT"),
+     *                 @OA\Property(property="expires_in", type="integer", description="Durée de validité en secondes"),
+     *                 @OA\Property(property="refresh_token", type="string", description="Nouveau token de rafraîchissement")
      *             )
      *         )
      *     ),
