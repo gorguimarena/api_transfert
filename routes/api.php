@@ -6,6 +6,7 @@ use App\Http\Controllers\CompteController;
 use App\Http\Middleware\LoggingMiddleware;
 use App\Http\Middleware\AuthMiddleware;
 
+
 Route::middleware(['api', LoggingMiddleware::class])->group(function () {
 
     Route::prefix('v1')->group(function () {
