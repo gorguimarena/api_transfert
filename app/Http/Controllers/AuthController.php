@@ -137,11 +137,11 @@ class AuthController extends Controller
         $cookie = Cookie::make(
             'refresh_token',
             $tokenData['refresh_token'],
-            60 * 24 * 30, // 30 jours
+            60 * 24 * 30, 
             null,
             null,
-            true, // secure
-            true  // httpOnly
+            true, 
+            true  
         );
 
         return $this->successResponse(
@@ -237,8 +237,8 @@ class AuthController extends Controller
 
         return $this->successResponse([
             'access_token' => $tokenData['access_token'],
-            'token_type' => $tokenData['token_type'],
-            'expires_in' => $tokenData['expires_in']
+            'expires_in' => $tokenData['expires_in'],
+            'refresh_token' => $tokenData['refresh_token']
         ], Messages::TOKEN_RENOUVELE->value)->withCookie($cookie)->header('Access-Control-Allow-Credentials', 'true');
     }
 
