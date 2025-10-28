@@ -48,7 +48,7 @@ enum Messages: string
     // Messages pour les comptes
     case SOLDE_INITIAL_OBLIGATOIRE = 'Le solde initial est obligatoire';
     case SOLDE_INITIAL_NUMERIC = 'Le solde initial doit être un nombre';
-    case SOLDE_INITIAL_MIN = 'Le solde initial doit être supérieur ou égal à 0';
+    case SOLDE_INITIAL_MIN = 'Le solde initial doit être supérieur ou égal à 10 000';
     case CLIENT_OBLIGATOIRE = 'Les informations du client sont obligatoires';
     case CLIENT_ARRAY = 'Les informations du client doivent être un objet';
     case EMAIL_VALIDE = 'L\'email doit être une adresse email valide';

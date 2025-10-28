@@ -82,9 +82,43 @@ class AuthController extends Controller
         }
 
         // Utiliser les credentials du client password grant créé
+        $clientId = env('PASSPORT_PASSWORD_CLIENT_ID');
+        $clientSecret = env('PASSPORT_PASSWORD_CLIENT_SECRET');
+
+        Log::info('OAuth Client Config', [
+            'client_id_env' => $clientId,
+            'client_secret_env' => $clientSecret ? '[SET]' : '[NOT SET]',
+            'client_id_type' => gettype($clientId),
+            'client_secret_type' => gettype($clientSecret)
+        ]);
+
+        // Trouver le client OAuth password grant valide
+        $oauthClient = \Laravel\Passport\Client::where('grant_types', 'like', '%password%')
+            ->where('revoked', false)
+            ->first();
+
+        if (!$oauthClient) {
+            Log::error('No valid OAuth password client found');
+            return $this->errorResponse('Configuration OAuth invalide', 500);
+        }
+
+        Log::info('OAuth Client Found', [
+            'client_id' => $oauthClient->id,
+            'client_secret' => $oauthClient->secret ? '[SET]' : '[NULL]',
+            'grant_types' => $oauthClient->grant_types
+        ]);
+
+        // Créer un secret temporaire si nécessaire
+        $clientSecret = $oauthClient->secret;
+        if (!$clientSecret) {
+            $clientSecret = \Illuminate\Support\Str::random(40);
+            $oauthClient->update(['secret' => $clientSecret]);
+            Log::info('Generated temporary client secret', ['client_id' => $oauthClient->id]);
+        }
+
         $client = (object) [
-            'id' =>  env('PASSPORT_PASSWORD_CLIENT_ID'),
-            'secret' => env('PASSPORT_PASSWORD_CLIENT_SECRET')
+            'id' => $oauthClient->id,
+            'secret' => $clientSecret
         ];
 
         // Générer les tokens via Passport
@@ -107,28 +141,62 @@ class AuthController extends Controller
             // Générer les tokens via Passport avec la méthode OAuth2 standard
             $tokenRequest = $request->create('/oauth/token', 'POST', [
                 'grant_type' => 'password',
-                'client_id' => $client->id,
-                'client_secret' => $client->secret,
+                'client_id' => (string) $client->id,
+                'client_secret' => (string) $client->secret,
                 'username' => $request->email,
                 'password' => $request->password,
                 'scope' => '*'
             ]);
-
+    
+            Log::info('OAuth Token Request', [
+                'client_id' => $client->id,
+                'client_id_type' => gettype($client->id),
+                'client_secret_type' => gettype($client->secret),
+                'username' => $request->email,
+                'grant_type' => 'password',
+                'request_data' => [
+                    'grant_type' => 'password',
+                    'client_id' => (string) $client->id,
+                    'client_secret' => (string) $client->secret,
+                    'username' => $request->email,
+                    'password' => '[HIDDEN]',
+                    'scope' => '*'
+                ]
+            ]);
+    
             $tokenResponse = app()->handle($tokenRequest);
             $tokenData = json_decode($tokenResponse->getContent(), true);
+    
+            Log::info('OAuth Token Response', [
+                'status' => $tokenResponse->getStatusCode(),
+                'has_data' => !empty($tokenData),
+                'data_keys' => $tokenData ? array_keys($tokenData) : []
+            ]);
 
             if ($tokenResponse->getStatusCode() !== 200) {
                 Log::error('OAuth Token Error', [
                     'status' => $tokenResponse->getStatusCode(),
                     'response' => $tokenData,
-                    'client_id' => $client->id
+                    'client_id' => $client->id,
+                    'full_response' => $tokenResponse->getContent()
                 ]);
-                return $this->errorResponse(Messages::ERREUR_GENERATION_TOKEN->value . ': ' . ($tokenData['message'] ?? 'Erreur inconnue'), 500);
+
+                $errorMessage = $tokenData['message'] ?? 'Erreur inconnue';
+                if (isset($tokenData['error'])) {
+                    $errorMessage = $tokenData['error'];
+                }
+                if (isset($tokenData['error_description'])) {
+                    $errorMessage .= ': ' . $tokenData['error_description'];
+                }
+
+                return $this->errorResponse(Messages::ERREUR_GENERATION_TOKEN->value . ': ' . $errorMessage, 500);
             }
         } catch (\Exception $e) {
             Log::error('OAuth Token Exception', [
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
+                'client_id' => $client->id,
+                'user_email' => $request->email
             ]);
             return $this->errorResponse(Messages::ERREUR_GENERATION_TOKEN->value . ': ' . $e->getMessage(), 500);
         }

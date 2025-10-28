@@ -19,6 +19,7 @@ class Compte extends Model
         'type_compte',
         'status_compte',
         'telephone',
+        'devise',
         'client_id',
         'is_deleted',
         'blocked_at',
@@ -27,7 +28,6 @@ class Compte extends Model
         'is_archived',
         'archived_at',
         'devise',
-        'solde_initial',
         'motif_blocage',
     ];
 

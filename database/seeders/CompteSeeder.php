@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Client;
 use App\Models\Compte;
+use App\Models\Transaction;
+use App\TypeTransaction;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
@@ -44,16 +46,25 @@ class CompteSeeder extends Seeder
                     $motifBlocage = $motifs[array_rand($motifs)];
                 }
 
-                Compte::create([
+                $compte = Compte::create([
                     'numero_compte' => $numero,
                     'type_compte' => ['epargne', 'cheque'][rand(0, 1)],
                     'status_compte' => $status,
                     'telephone' => '+221' . rand(771234567, 789876543),
+                    'devise' => 'FCFA',
                     'client_id' => $client->id,
                     'is_deleted' => false,
                     'devise' => ['FCFA', 'EUR', 'USD'][rand(0, 2)],
                     'solde_initial' => rand(0, 5000000), // Solde initial aléatoire entre 0 et 5M
                     'motif_blocage' => $motifBlocage,
+                ]);
+
+                // Créer une transaction de dépôt initial avec un montant >= 10000
+                $montantInitial = rand(10000, 100000); // Entre 10k et 100k
+                Transaction::create([
+                    'montant' => $montantInitial,
+                    'type_transaction' => TypeTransaction::DEPOT->value,
+                    'compte_id' => $compte->id,
                 ]);
             }
         }

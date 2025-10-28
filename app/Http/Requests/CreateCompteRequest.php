@@ -35,7 +35,7 @@ class CreateCompteRequest extends FormRequest
         $rules = [
             'type' => 'required|in:epargne,cheque',
             'devise' => 'nullable|string|in:FCFA,EUR,USD',
-            'soldeInitial' => 'required|numeric|min:0',
+            'soldeInitial' => 'required|numeric|min:10000',
             'client' => 'required|array',
             'client.id' => 'nullable|uuid|exists:users,id',
             'client.titulaire' => 'required|string|max:255',
