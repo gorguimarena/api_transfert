@@ -2,7 +2,7 @@
     "openapi": "3.0.0",
     "info": {
         "title": "API de Transfert Bancaire",
-        "description": "API pour la gestion des comptes bancaires",
+        "description": "API REST pour la gestion des comptes bancaires avec authentification OAuth2",
         "version": "1.0.0"
     },
     "servers": [
@@ -11,7 +11,7 @@
             "description": "Serveur de développement"
         },
         {
-            "url": "https://api-transfert.onrender.com/api",
+            "url": "https://api-transfert.onrender.com",
             "description": "Serveur de production"
         }
     ],
@@ -22,9 +22,10 @@
                     "Authentification"
                 ],
                 "summary": "Connexion utilisateur",
-                "description": "Authentifier un utilisateur\n\nAuthentification d'un utilisateur et génération des tokens d'accès",
-                "operationId": "5db09a35f965c6ca7529ed3c3cae8e21",
+                "description": "Authentification d'un utilisateur et génération des tokens d'accès OAuth2",
+                "operationId": "loginUser",
                 "requestBody": {
+                    "description": "Informations de connexion",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -35,15 +36,18 @@
                                 ],
                                 "properties": {
                                     "email": {
+                                        "description": "Adresse email de l'utilisateur",
                                         "type": "string",
                                         "format": "email",
                                         "example": "admin@example.com"
                                     },
                                     "password": {
+                                        "description": "Mot de passe de l'utilisateur",
                                         "type": "string",
                                         "example": "password"
                                     },
                                     "remember": {
+                                        "description": "Se souvenir de la connexion",
                                         "type": "boolean",
                                         "example": true
                                     }
@@ -74,6 +78,7 @@
                                                     "$ref": "#/components/schemas/User"
                                                 },
                                                 "access_token": {
+                                                    "description": "Token d'accès JWT",
                                                     "type": "string"
                                                 },
                                                 "token_type": {
@@ -81,9 +86,11 @@
                                                     "example": "Bearer"
                                                 },
                                                 "expires_in": {
+                                                    "description": "Durée de validité en secondes",
                                                     "type": "integer"
                                                 },
                                                 "refresh_token": {
+                                                    "description": "Token de rafraîchissement",
                                                     "type": "string"
                                                 }
                                             },
@@ -114,8 +121,36 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "description": "Erreur de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur de validation"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "passport": []
+                    }
+                ]
             }
         },
         "/api/v1/auth/refresh": {
@@ -182,7 +217,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "token": []
+                    }
+                ]
             }
         },
         "/api/v1/auth/logout": {
@@ -237,63 +277,7 @@
                 },
                 "security": [
                     {
-                        "passport": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/auth/user": {
-            "get": {
-                "tags": [
-                    "Authentification"
-                ],
-                "summary": "Informations utilisateur connecté",
-                "description": "Récupérer les informations de l'utilisateur connecté\n\nRécupère les informations de l'utilisateur actuellement connecté",
-                "operationId": "c7ced6424ddad77f25a54e6346eb55e4",
-                "responses": {
-                    "200": {
-                        "description": "Informations utilisateur",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "data": {
-                                            "$ref": "#/components/schemas/User"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Non authentifié",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Non authentifié"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "passport": []
+                        "token": []
                     }
                 ]
             }
@@ -304,8 +288,8 @@
                     "Comptes"
                 ],
                 "summary": "Lister tous les comptes avec filtres optionnels",
-                "description": "Lister tous les comptes avec filtres optionnels\n\nRécupère une liste paginée des comptes bancaires avec filtrage optionnel par numéro de compte, nom d'utilisateur, type et statut",
-                "operationId": "c09c55b936e3520140768760edfa911e",
+                "description": "Récupère une liste paginée des comptes bancaires avec filtrage optionnel par numéro de compte, nom d'utilisateur, type et statut",
+                "operationId": "listComptes",
                 "parameters": [
                     {
                         "name": "numero_compte",
@@ -313,7 +297,8 @@
                         "description": "Filtrer par numéro de compte (correspondance partielle)",
                         "required": false,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "example": "20251026"
                         }
                     },
                     {
@@ -322,7 +307,8 @@
                         "description": "Filtrer par nom d'utilisateur (correspondance partielle)",
                         "required": false,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "example": "John"
                         }
                     },
                     {
@@ -335,7 +321,8 @@
                             "enum": [
                                 "epargne",
                                 "cheque"
-                            ]
+                            ],
+                            "example": "cheque"
                         }
                     },
                     {
@@ -348,7 +335,8 @@
                             "enum": [
                                 "active",
                                 "bloque"
-                            ]
+                            ],
+                            "example": "active"
                         }
                     },
                     {
@@ -364,7 +352,8 @@
                                 "numero_compte",
                                 "type_compte",
                                 "status_compte"
-                            ]
+                            ],
+                            "example": "dateCreation"
                         }
                     },
                     {
@@ -378,7 +367,8 @@
                             "enum": [
                                 "asc",
                                 "desc"
-                            ]
+                            ],
+                            "example": "desc"
                         }
                     },
                     {
@@ -388,7 +378,10 @@
                         "required": false,
                         "schema": {
                             "type": "integer",
-                            "default": 10
+                            "default": 10,
+                            "maximum": 100,
+                            "minimum": 1,
+                            "example": 10
                         }
                     },
                     {
@@ -398,13 +391,15 @@
                         "required": false,
                         "schema": {
                             "type": "integer",
-                            "default": 1
+                            "default": 1,
+                            "minimum": 1,
+                            "example": 1
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Opération réussie",
+                        "description": "Liste des comptes récupérée avec succès",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -420,7 +415,8 @@
                                         "data": {
                                             "properties": {
                                                 "current_page": {
-                                                    "type": "integer"
+                                                    "type": "integer",
+                                                    "example": 1
                                                 },
                                                 "data": {
                                                     "type": "array",
@@ -429,10 +425,24 @@
                                                     }
                                                 },
                                                 "total": {
-                                                    "type": "integer"
+                                                    "type": "integer",
+                                                    "example": 7
                                                 },
                                                 "per_page": {
-                                                    "type": "integer"
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "from": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "to": {
+                                                    "type": "integer",
+                                                    "example": 7
                                                 }
                                             },
                                             "type": "object"
@@ -455,7 +465,30 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Non authentifié"
+                                            "example": "Utilisateur non authentifié"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erreur de validation des paramètres",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur de validation"
+                                        },
+                                        "errors": {
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -466,7 +499,7 @@
                 },
                 "security": [
                     {
-                        "passport": []
+                        "token": []
                     }
                 ]
             },
@@ -622,7 +655,7 @@
                 },
                 "security": [
                     {
-                        "passport": []
+                        "token": []
                     }
                 ]
             }
@@ -713,474 +746,7 @@
                 },
                 "security": [
                     {
-                        "passport": []
-                    }
-                ]
-            }
-        },
-        "/oauth/token": {
-            "post": {
-                "tags": [
-                    "OAuth2"
-                ],
-                "summary": "Obtenir un token d'accès",
-                "description": "Authentification OAuth2 pour obtenir un access token. Route générée par Passport.",
-                "operationId": "26570df72160b2d15db22bb80394e1f5",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "grant_type",
-                                    "client_id",
-                                    "client_secret",
-                                    "username",
-                                    "password"
-                                ],
-                                "properties": {
-                                    "grant_type": {
-                                        "type": "string",
-                                        "enum": [
-                                            "password"
-                                        ],
-                                        "example": "password"
-                                    },
-                                    "client_id": {
-                                        "type": "string",
-                                        "example": "1"
-                                    },
-                                    "client_secret": {
-                                        "type": "string",
-                                        "example": "client-secret-here"
-                                    },
-                                    "username": {
-                                        "type": "string",
-                                        "example": "admin@example.com"
-                                    },
-                                    "password": {
-                                        "type": "string",
-                                        "example": "password"
-                                    },
-                                    "scope": {
-                                        "type": "string",
-                                        "example": "*"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Token obtenu avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "token_type": {
-                                            "type": "string",
-                                            "example": "Bearer"
-                                        },
-                                        "expires_in": {
-                                            "type": "integer",
-                                            "example": 31536000
-                                        },
-                                        "access_token": {
-                                            "type": "string"
-                                        },
-                                        "refresh_token": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Erreur d'authentification",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "invalid_credentials"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "The user credentials were incorrect."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/oauth/token/refresh": {
-            "post": {
-                "tags": [
-                    "OAuth2"
-                ],
-                "summary": "Rafraîchir un token d'accès",
-                "description": "Utiliser un refresh token pour obtenir un nouveau access token. Route générée par Passport.",
-                "operationId": "a79c3077c57526b719524f54f512417f",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "grant_type",
-                                    "refresh_token",
-                                    "client_id",
-                                    "client_secret"
-                                ],
-                                "properties": {
-                                    "grant_type": {
-                                        "type": "string",
-                                        "enum": [
-                                            "refresh_token"
-                                        ],
-                                        "example": "refresh_token"
-                                    },
-                                    "refresh_token": {
-                                        "type": "string",
-                                        "example": "refresh-token-here"
-                                    },
-                                    "client_id": {
-                                        "type": "string",
-                                        "example": "1"
-                                    },
-                                    "client_secret": {
-                                        "type": "string",
-                                        "example": "client-secret-here"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Nouveau token obtenu",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "token_type": {
-                                            "type": "string",
-                                            "example": "Bearer"
-                                        },
-                                        "expires_in": {
-                                            "type": "integer",
-                                            "example": 31536000
-                                        },
-                                        "access_token": {
-                                            "type": "string"
-                                        },
-                                        "refresh_token": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/oauth/clients": {
-            "get": {
-                "tags": [
-                    "OAuth2"
-                ],
-                "summary": "Lister les clients OAuth2",
-                "description": "Récupérer la liste des clients OAuth2 enregistrés. Route générée par Passport.",
-                "operationId": "2757e410076654b7592609f6f52bceaa",
-                "responses": {
-                    "200": {
-                        "description": "Liste des clients",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "properties": {
-                                            "id": {
-                                                "type": "integer"
-                                            },
-                                            "user_id": {
-                                                "type": "integer"
-                                            },
-                                            "name": {
-                                                "type": "string"
-                                            },
-                                            "secret": {
-                                                "type": "string"
-                                            },
-                                            "redirect": {
-                                                "type": "string"
-                                            },
-                                            "personal_access_client": {
-                                                "type": "boolean"
-                                            },
-                                            "password_client": {
-                                                "type": "boolean"
-                                            },
-                                            "revoked": {
-                                                "type": "boolean"
-                                            }
-                                        },
-                                        "type": "object"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "passport": []
-                    }
-                ]
-            },
-            "post": {
-                "tags": [
-                    "OAuth2"
-                ],
-                "summary": "Créer un client OAuth2",
-                "description": "Créer un nouveau client OAuth2. Route générée par Passport.",
-                "operationId": "c1d3a11633c885f710e9a07462f6041c",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "name",
-                                    "redirect"
-                                ],
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "example": "My App"
-                                    },
-                                    "redirect": {
-                                        "type": "string",
-                                        "example": "http://localhost/callback"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Client créé",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "id": {
-                                            "type": "integer"
-                                        },
-                                        "user_id": {
-                                            "type": "integer"
-                                        },
-                                        "name": {
-                                            "type": "string"
-                                        },
-                                        "secret": {
-                                            "type": "string"
-                                        },
-                                        "redirect": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "passport": []
-                    }
-                ]
-            }
-        },
-        "/oauth/clients/{client_id}": {
-            "put": {
-                "tags": [
-                    "OAuth2"
-                ],
-                "summary": "Modifier un client OAuth2",
-                "description": "Modifier les informations d'un client OAuth2. Route générée par Passport.",
-                "operationId": "f1cf3d2066bb4e4d3c225f7109a195f7",
-                "parameters": [
-                    {
-                        "name": "client_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "name",
-                                    "redirect"
-                                ],
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "example": "Updated App Name"
-                                    },
-                                    "redirect": {
-                                        "type": "string",
-                                        "example": "http://localhost/new-callback"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Client modifié"
-                    }
-                },
-                "security": [
-                    {
-                        "passport": []
-                    }
-                ]
-            },
-            "delete": {
-                "tags": [
-                    "OAuth2"
-                ],
-                "summary": "Supprimer un client OAuth2",
-                "description": "Supprimer un client OAuth2. Route générée par Passport.",
-                "operationId": "20309bdd897c31ea5efcbf8b37352352",
-                "parameters": [
-                    {
-                        "name": "client_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Client supprimé"
-                    }
-                },
-                "security": [
-                    {
-                        "passport": []
-                    }
-                ]
-            }
-        },
-        "/oauth/scopes": {
-            "get": {
-                "tags": [
-                    "OAuth2"
-                ],
-                "summary": "Lister les scopes OAuth2",
-                "description": "Récupérer la liste des scopes OAuth2 disponibles. Route générée par Passport.",
-                "operationId": "8fb2ff58e5deb2170711e1902d035654",
-                "responses": {
-                    "200": {
-                        "description": "Liste des scopes",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "properties": {
-                                            "id": {
-                                                "type": "string"
-                                            },
-                                            "description": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "type": "object"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "passport": []
-                    }
-                ]
-            }
-        },
-        "/oauth/user": {
-            "get": {
-                "tags": [
-                    "OAuth2"
-                ],
-                "summary": "Informations utilisateur OAuth2",
-                "description": "Récupérer les informations de l'utilisateur OAuth2. Route générée par Passport.",
-                "operationId": "38d19b733e0a8744955193b6418dedc6",
-                "responses": {
-                    "200": {
-                        "description": "Informations utilisateur",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "id": {
-                                            "type": "string",
-                                            "format": "uuid"
-                                        },
-                                        "name": {
-                                            "type": "string"
-                                        },
-                                        "email": {
-                                            "type": "string"
-                                        },
-                                        "type": {
-                                            "type": "string",
-                                            "enum": [
-                                                "admin",
-                                                "client"
-                                            ]
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "passport": []
+                        "token": []
                     }
                 ]
             }
@@ -1287,13 +853,19 @@
                 },
                 "type": "object"
             }
+        },
+        "securitySchemes": {
+            "token": {
+                "type": "http",
+                "bearerFormat": "JWT",
+                "scheme": "Bearer",
+                "in": "header",
+                "name": "Authorization",
+                "description": "Token JWT obtenu via l'authentification OAuth2. Format: Bearer {token}. Pour obtenir un token, utilisez l'endpoint POST /api/v1/auth/login avec vos identifiants."
+            }
         }
     },
     "tags": [
-        {
-            "name": "OAuth2",
-            "description": "Routes OAuth2 générées automatiquement par Laravel Passport"
-        },
         {
             "name": "Authentification",
             "description": "Authentification"
@@ -1305,7 +877,7 @@
     ],
     "security": [
         {
-            "passport": []
+            "token": []
         }
     ]
 }

@@ -9,3 +9,33 @@ services:
         value: production
       - key: APP_KEY
         generateValue: true
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: laravel_db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: laravel_db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: laravel_db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: laravel_db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: laravel_db
+          property: password
+      - key: PASSPORT_PASSWORD_CLIENT_ID
+        value: 019a2442-2105-73fa-bfd2-854ee5e60a2b
+      - key: PASSPORT_PASSWORD_CLIENT_SECRET
+        value: k17ChvjkxTaDvqsiFoFCH8Ua6HUirN6JwyXJenus
+
+  - type: pgsql
+    name: laravel_db
+    ipAllowList: []
