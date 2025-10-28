@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Compte;
 use App\Models\Client;
 use App\Models\User;
+use App\Models\Transaction;
 use App\Helpers\QueryHelper;
 use App\Http\Requests\CreateCompteRequest;
 use App\Http\Resources\CompteResource;
 use App\Events\CompteCreated;
 use App\Messages;
 use App\ResponseTrait;
+use App\TypeTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -351,10 +353,18 @@ class CompteController extends Controller
                 'status_compte' => 'active',
                 'telephone' => $request->client['telephone'],
                 'devise' => $request->devise ?? 'FCFA',
-                'solde_initial' => $request->soldeInitial,
                 'is_deleted' => false,
                 'client_id' => $client->id,
             ]);
+
+            // Créer la transaction de dépôt initial si le solde initial est supérieur à 0
+            if ($request->soldeInitial > 0) {
+                Transaction::create([
+                    'montant' => $request->soldeInitial,
+                    'type_transaction' => TypeTransaction::DEPOT->value,
+                    'compte_id' => $compte->id,
+                ]);
+            }
 
             DB::commit();
 

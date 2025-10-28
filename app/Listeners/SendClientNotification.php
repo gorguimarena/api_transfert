@@ -6,8 +6,9 @@ use App\Events\CompteCreated;
 use App\Services\ISmsService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class SendClientNotification
+class SendClientNotification implements ShouldQueue
 {
     protected ISmsService $smsService;
 
@@ -24,6 +25,15 @@ class SendClientNotification
         $compte = $event->compte;
         $client = $compte->client;
         $user = $client->user;
+
+        Log::info("Début de l'envoi des notifications pour le compte {$compte->numero_compte}", [
+            'compte_id' => $compte->id,
+            'client_id' => $client->id,
+            'user_email' => $user->email,
+            'telephone' => $compte->telephone,
+            'generatedPassword' => $event->generatedPassword ? 'present' : 'null',
+            'verificationCode' => $event->verificationCode ? 'present' : 'null'
+        ]);
 
         // Envoyer l'email avec le mot de passe
         $this->sendEmail($user->email, $event->generatedPassword, $client);
@@ -73,8 +83,16 @@ class SendClientNotification
      */
     private function sendSMS(string $telephone, string $code): void
     {
+        Log::info("Tentative d'envoi SMS", [
+            'telephone' => $telephone,
+            'code' => $code,
+            'code_length' => strlen($code)
+        ]);
+
         try {
             $message = "Votre code de vérification est: {$code}";
+            Log::info("Message SMS préparé", ['message' => $message]);
+
             $success = $this->smsService->sendSms($telephone, $message);
 
             if ($success) {
@@ -84,7 +102,9 @@ class SendClientNotification
             }
 
         } catch (\Exception $e) {
-            Log::error("Erreur lors de l'envoi du SMS au {$telephone}: " . $e->getMessage());
+            Log::error("Exception lors de l'envoi du SMS au {$telephone}: " . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
         }
     }
 }

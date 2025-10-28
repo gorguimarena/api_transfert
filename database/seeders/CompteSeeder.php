@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Client;
 use App\Models\Compte;
+use App\Models\Transaction;
+use App\TypeTransaction;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
@@ -31,13 +33,22 @@ class CompteSeeder extends Seeder
             for ($i = 0; $i < $numComptes; $i++) {
                 $numero = now()->format('Ymd') . str_pad(mt_rand(0, 99999999), 8, '0', STR_PAD_LEFT);
 
-                Compte::create([
+                $compte = Compte::create([
                     'numero_compte' => $numero,
                     'type_compte' => ['epargne', 'cheque'][rand(0, 1)],
                     'status_compte' => 'active', // Force active pour que les comptes soient visibles
                     'telephone' => '+221' . rand(771234567, 789876543),
+                    'devise' => 'FCFA',
                     'client_id' => $client->id,
                     'is_deleted' => false,
+                ]);
+
+                // Créer une transaction de dépôt initial avec un montant >= 10000
+                $montantInitial = rand(10000, 100000); // Entre 10k et 100k
+                Transaction::create([
+                    'montant' => $montantInitial,
+                    'type_transaction' => TypeTransaction::DEPOT->value,
+                    'compte_id' => $compte->id,
                 ]);
             }
         }

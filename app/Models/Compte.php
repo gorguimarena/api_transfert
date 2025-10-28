@@ -19,6 +19,8 @@ class Compte extends Model
         'type_compte',
         'status_compte',
         'telephone',
+        'devise',
+        'solde_initial',
         'client_id',
         'is_deleted',
     ];
