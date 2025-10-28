@@ -14,7 +14,7 @@ class CompteResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return [
+        $data = [
             'id' => (string) $this->id,
             'numeroCompte' => (string) $this->numero_compte,
             'titulaire' => (string) $this->client->user->name,
@@ -28,5 +28,11 @@ class CompteResource extends JsonResource
                 'version' => (int) 1
             ]
         ];
+
+        if ($this->status_compte === 'bloque' && $this->motif_blocage) {
+            $data['motifBlocage'] = (string) $this->motif_blocage;
+        }
+
+        return $data;
     }
 }

@@ -40,14 +40,19 @@ use Illuminate\Support\Facades\Hash;
  * @OA\Schema(
  *     schema="Compte",
  *     type="object",
- *     @OA\Property(property="id", type="string", format="uuid", example="123e4567-e89b-12d3-a456-426614174000"),
- *     @OA\Property(property="numero_compte", type="string", example="123456789"),
- *     @OA\Property(property="type_compte", type="string", enum={"epargne", "cheque"}, example="epargne"),
- *     @OA\Property(property="status_compte", type="string", enum={"active", "bloque"}, example="active"),
- *     @OA\Property(property="telephone", type="string", example="+221771234567"),
- *     @OA\Property(property="client", ref="#/components/schemas/Client"),
- *     @OA\Property(property="created_at", type="string", format="date-time"),
- *     @OA\Property(property="updated_at", type="string", format="date-time")
+ *     @OA\Property(property="id", type="string", format="uuid", example="550e8400-e29b-41d4-a716-446655440000"),
+ *     @OA\Property(property="numeroCompte", type="string", example="C00123456"),
+ *     @OA\Property(property="titulaire", type="string", example="Amadou Diallo"),
+ *     @OA\Property(property="type", type="string", enum={"epargne", "cheque"}, example="epargne"),
+ *     @OA\Property(property="solde", type="number", format="float", example=1250000),
+ *     @OA\Property(property="devise", type="string", enum={"FCFA", "EUR", "USD"}, example="FCFA"),
+ *     @OA\Property(property="dateCreation", type="string", format="date-time", example="2023-03-15T00:00:00Z"),
+ *     @OA\Property(property="statut", type="string", enum={"active", "bloque"}, example="bloque"),
+ *     @OA\Property(property="motifBlocage", type="string", example="Inactivité de 30+ jours", nullable=true),
+ *     @OA\Property(property="metadata", type="object",
+ *         @OA\Property(property="derniereModification", type="string", format="date-time", example="2023-06-10T14:30:00Z"),
+ *         @OA\Property(property="version", type="integer", example=1)
+ *     )
  * )
  *
  * @OA\Schema(
@@ -196,13 +201,21 @@ class CompteController extends Controller
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Comptes récupérés avec succès"),
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="current_page", type="integer", example=1),
      *                 @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Compte")),
-     *                 @OA\Property(property="total", type="integer", example=7),
-     *                 @OA\Property(property="per_page", type="integer", example=10),
-     *                 @OA\Property(property="last_page", type="integer", example=1),
-     *                 @OA\Property(property="from", type="integer", example=1),
-     *                 @OA\Property(property="to", type="integer", example=7)
+     *                 @OA\Property(property="pagination", type="object",
+     *                     @OA\Property(property="currentPage", type="integer", example=1),
+     *                     @OA\Property(property="totalPages", type="integer", example=3),
+     *                     @OA\Property(property="totalItems", type="integer", example=25),
+     *                     @OA\Property(property="itemsPerPage", type="integer", example=10),
+     *                     @OA\Property(property="hasNext", type="boolean", example=true),
+     *                     @OA\Property(property="hasPrevious", type="boolean", example=false)
+     *                 ),
+     *                 @OA\Property(property="links", type="object",
+     *                     @OA\Property(property="self", type="string", example="/api/v1/comptes?page=1&limit=10"),
+     *                     @OA\Property(property="next", type="string", example="/api/v1/comptes?page=2&limit=10"),
+     *                     @OA\Property(property="first", type="string", example="/api/v1/comptes?page=1&limit=10"),
+     *                     @OA\Property(property="last", type="string", example="/api/v1/comptes?page=3&limit=10")
+     *                 )
      *             )
      *         )
      *     ),
@@ -234,10 +247,29 @@ class CompteController extends Controller
         $query = QueryHelper::applySorting($query, $request, $this->sortMapping);
 
         $limit = $request->get('limit', 10);
-        $comptes = $query->paginate($limit);
+        $page = $request->get('page', 1);
+        $comptes = $query->paginate($limit, ['*'], 'page', $page);
+
+        $data = [
+            'data' => CompteResource::collection($comptes->items()),
+            'pagination' => [
+                'currentPage' => $comptes->currentPage(),
+                'totalPages' => $comptes->lastPage(),
+                'totalItems' => $comptes->total(),
+                'itemsPerPage' => $comptes->perPage(),
+                'hasNext' => $comptes->hasMorePages(),
+                'hasPrevious' => $comptes->currentPage() > 1,
+            ],
+            'links' => [
+                'self' => $request->url() . '?' . http_build_query($request->query()),
+                'next' => $comptes->nextPageUrl(),
+                'first' => $request->url() . '?' . http_build_query(array_merge($request->query(), ['page' => 1])),
+                'last' => $request->url() . '?' . http_build_query(array_merge($request->query(), ['page' => $comptes->lastPage()])),
+            ]
+        ];
 
         $message = $user->type === 'client' ? 'Vos comptes récupérés avec succès' : Messages::COMPTES_RECUPERES->value;
-        return $this->successResponse($comptes, $message)->header('Access-Control-Allow-Credentials', 'true');
+        return $this->successResponse($data, $message)->header('Access-Control-Allow-Credentials', 'true');
     }
 
     /**

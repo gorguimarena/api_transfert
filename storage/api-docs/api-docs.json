@@ -414,35 +414,61 @@
                                         },
                                         "data": {
                                             "properties": {
-                                                "current_page": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
                                                 "data": {
                                                     "type": "array",
                                                     "items": {
                                                         "$ref": "#/components/schemas/Compte"
                                                     }
                                                 },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": 7
+                                                "pagination": {
+                                                    "properties": {
+                                                        "currentPage": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "totalPages": {
+                                                            "type": "integer",
+                                                            "example": 3
+                                                        },
+                                                        "totalItems": {
+                                                            "type": "integer",
+                                                            "example": 25
+                                                        },
+                                                        "itemsPerPage": {
+                                                            "type": "integer",
+                                                            "example": 10
+                                                        },
+                                                        "hasNext": {
+                                                            "type": "boolean",
+                                                            "example": true
+                                                        },
+                                                        "hasPrevious": {
+                                                            "type": "boolean",
+                                                            "example": false
+                                                        }
+                                                    },
+                                                    "type": "object"
                                                 },
-                                                "per_page": {
-                                                    "type": "integer",
-                                                    "example": 10
-                                                },
-                                                "last_page": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "from": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "to": {
-                                                    "type": "integer",
-                                                    "example": 7
+                                                "links": {
+                                                    "properties": {
+                                                        "self": {
+                                                            "type": "string",
+                                                            "example": "/api/v1/comptes?page=1&limit=10"
+                                                        },
+                                                        "next": {
+                                                            "type": "string",
+                                                            "example": "/api/v1/comptes?page=2&limit=10"
+                                                        },
+                                                        "first": {
+                                                            "type": "string",
+                                                            "example": "/api/v1/comptes?page=1&limit=10"
+                                                        },
+                                                        "last": {
+                                                            "type": "string",
+                                                            "example": "/api/v1/comptes?page=3&limit=10"
+                                                        }
+                                                    },
+                                                    "type": "object"
                                                 }
                                             },
                                             "type": "object"
@@ -759,13 +785,17 @@
                     "id": {
                         "type": "string",
                         "format": "uuid",
-                        "example": "123e4567-e89b-12d3-a456-426614174000"
+                        "example": "550e8400-e29b-41d4-a716-446655440000"
                     },
-                    "numero_compte": {
+                    "numeroCompte": {
                         "type": "string",
-                        "example": "123456789"
+                        "example": "C00123456"
                     },
-                    "type_compte": {
+                    "titulaire": {
+                        "type": "string",
+                        "example": "Amadou Diallo"
+                    },
+                    "type": {
                         "type": "string",
                         "enum": [
                             "epargne",
@@ -773,28 +803,51 @@
                         ],
                         "example": "epargne"
                     },
-                    "status_compte": {
+                    "solde": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 1250000
+                    },
+                    "devise": {
+                        "type": "string",
+                        "enum": [
+                            "FCFA",
+                            "EUR",
+                            "USD"
+                        ],
+                        "example": "FCFA"
+                    },
+                    "dateCreation": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2023-03-15T00:00:00Z"
+                    },
+                    "statut": {
                         "type": "string",
                         "enum": [
                             "active",
                             "bloque"
                         ],
-                        "example": "active"
+                        "example": "bloque"
                     },
-                    "telephone": {
+                    "motifBlocage": {
                         "type": "string",
-                        "example": "+221771234567"
+                        "example": "Inactivité de 30+ jours",
+                        "nullable": true
                     },
-                    "client": {
-                        "$ref": "#/components/schemas/Client"
-                    },
-                    "created_at": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "updated_at": {
-                        "type": "string",
-                        "format": "date-time"
+                    "metadata": {
+                        "properties": {
+                            "derniereModification": {
+                                "type": "string",
+                                "format": "date-time",
+                                "example": "2023-06-10T14:30:00Z"
+                            },
+                            "version": {
+                                "type": "integer",
+                                "example": 1
+                            }
+                        },
+                        "type": "object"
                     }
                 },
                 "type": "object"

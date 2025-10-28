@@ -21,6 +21,9 @@ class Compte extends Model
         'telephone',
         'client_id',
         'is_deleted',
+        'devise',
+        'solde_initial',
+        'motif_blocage',
     ];
 
     public function client() {
