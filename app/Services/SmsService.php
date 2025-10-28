@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http;
+use Twilio\Rest\Client;
 use Exception;
 
 class SmsService implements ISmsService
@@ -11,6 +11,7 @@ class SmsService implements ISmsService
     private string $accountSid;
     private string $authToken;
     private string $fromNumber;
+    private Client $twilioClient;
 
     public function __construct()
     {
@@ -23,6 +24,12 @@ class SmsService implements ISmsService
             'authToken' => $this->authToken ? 'configured' : 'missing',
             'fromNumber' => $this->fromNumber ? 'configured' : 'missing'
         ]);
+
+        // Initialiser le client Twilio
+        if ($this->accountSid && $this->authToken) {
+            $this->twilioClient = new Client($this->accountSid, $this->authToken);
+            Log::info('Twilio client initialized successfully');
+        }
     }
 
     /**
@@ -34,7 +41,7 @@ class SmsService implements ISmsService
      */
     public function sendSms(string $to, string $message): bool
     {
-        Log::info('Tentative d\'envoi SMS', [
+        Log::info('Tentative d\'envoi SMS via Twilio SDK', [
             'to' => $to,
             'message_length' => strlen($message),
             'accountSid' => substr($this->accountSid, 0, 10) . '...',
@@ -52,56 +59,46 @@ class SmsService implements ISmsService
                 return false;
             }
 
+            // Vérifier que le client Twilio est initialisé
+            if (!isset($this->twilioClient)) {
+                Log::error('Client Twilio non initialisé');
+                return false;
+            }
+
             // Formater le numéro de téléphone
             $formattedTo = $this->formatPhoneNumber($to);
             Log::info('Numéro formaté', ['original' => $to, 'formatted' => $formattedTo]);
 
-            // URL de l'API Twilio
-            $url = "https://api.twilio.com/2010-04-01/Accounts/{$this->accountSid}/Messages.json";
-            Log::info('URL Twilio', ['url' => $url]);
+            // Envoyer le SMS via le SDK Twilio
+            $messageInstance = $this->twilioClient->messages->create(
+                $formattedTo, // To
+                [
+                    'from' => $this->fromNumber,
+                    'body' => $message
+                ]
+            );
 
-            // Préparer les données
-            $postData = [
-                'From' => $this->fromNumber,
-                'To' => $formattedTo,
-                'Body' => $message,
-            ];
-            Log::info('Données POST', ['data' => $postData]);
-
-            // Envoyer la requête POST à Twilio
-            $response = Http::withBasicAuth($this->accountSid, $this->authToken)
-                ->asForm()
-                ->post($url, $postData);
-
-            Log::info('Réponse Twilio reçue', [
-                'status' => $response->status(),
-                'successful' => $response->successful(),
-                'headers' => $response->headers()
+            Log::info("SMS envoyé avec succès via Twilio SDK", [
+                'to' => $formattedTo,
+                'sid' => $messageInstance->sid,
+                'status' => $messageInstance->status,
+                'direction' => $messageInstance->direction,
+                'dateCreated' => $messageInstance->dateCreated->format('Y-m-d H:i:s')
             ]);
 
-            if ($response->successful()) {
-                $data = $response->json();
-                Log::info("SMS envoyé avec succès via Twilio", [
-                    'to' => $formattedTo,
-                    'sid' => $data['sid'] ?? null,
-                    'status' => $data['status'] ?? null,
-                    'full_response' => $data
-                ]);
-                return true;
-            } else {
-                $errorData = $response->json();
-                Log::error("Erreur lors de l'envoi du SMS via Twilio", [
-                    'to' => $formattedTo,
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                    'error_data' => $errorData,
-                    'headers' => $response->headers()
-                ]);
-                return false;
-            }
+            return true;
+
+        } catch (\Twilio\Exceptions\RestException $e) {
+            Log::error("Erreur Twilio REST lors de l'envoi du SMS: " . $e->getMessage(), [
+                'to' => $to,
+                'code' => $e->getCode(),
+                'status' => $e->getStatusCode(),
+                'moreInfo' => $e->getMoreInfo()
+            ]);
+            return false;
 
         } catch (Exception $e) {
-            Log::error("Exception lors de l'envoi du SMS via Twilio: " . $e->getMessage(), [
+            Log::error("Exception lors de l'envoi du SMS via Twilio SDK: " . $e->getMessage(), [
                 'to' => $to,
                 'message' => $message,
                 'trace' => $e->getTraceAsString()
