@@ -25,6 +25,8 @@ Route::middleware(['api', LoggingMiddleware::class])->group(function () {
             Route::middleware(AuthMiddleware::class)->get('/{compte}', [CompteController::class, 'show']);
 
             Route::middleware(AuthMiddleware::class)->post('/', [CompteController::class, 'store']);
+
+            Route::middleware(AuthMiddleware::class)->post('/{compte}/bloquer', [CompteController::class, 'bloquer']);
         });
     });
 });

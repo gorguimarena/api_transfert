@@ -12,7 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('comptes', function (Blueprint $table) {
-            //
+            $table->timestamp('blocked_at')->nullable();
+            $table->timestamp('block_end_date')->nullable();
+            $table->string('block_reason')->nullable();
+            $table->boolean('is_archived')->default(false);
+            $table->timestamp('archived_at')->nullable();
         });
     }
 

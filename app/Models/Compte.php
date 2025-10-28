@@ -21,6 +21,11 @@ class Compte extends Model
         'telephone',
         'client_id',
         'is_deleted',
+        'blocked_at',
+        'block_end_date',
+        'block_reason',
+        'is_archived',
+        'archived_at',
     ];
 
     public function client() {

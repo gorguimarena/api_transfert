@@ -26,10 +26,10 @@ class ArchiveComptesJob implements ShouldQueue
      */
     public function handle(): void
     {
-        // Trouver tous les comptes bloqués dont la date de fin de blocage est dépassée
+        // Trouver tous les comptes bloqués dont la date de début de blocage est dépassée
         $comptesToArchive = Compte::where('status_compte', 'bloque')
-            ->whereNotNull('block_end_date')
-            ->where('block_end_date', '<=', now())
+            ->whereNotNull('blocked_at')
+            ->where('blocked_at', '<=', now())
             ->where('is_archived', false)
             ->get();
 
