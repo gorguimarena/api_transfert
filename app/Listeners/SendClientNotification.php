@@ -3,12 +3,19 @@
 namespace App\Listeners;
 
 use App\Events\CompteCreated;
+use App\Services\ISmsService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Http;
 
 class SendClientNotification
 {
+    protected ISmsService $smsService;
+
+    public function __construct(ISmsService $smsService)
+    {
+        $this->smsService = $smsService;
+    }
+
     /**
      * Handle the event.
      */
@@ -31,6 +38,7 @@ class SendClientNotification
             'telephone' => $compte->telephone
         ]);
     }
+
 
     /**
      * Envoyer l'email d'authentification
@@ -66,24 +74,14 @@ class SendClientNotification
     private function sendSMS(string $telephone, string $code): void
     {
         try {
-            // Ici vous pouvez intégrer un service SMS comme Twilio, Africa's Talking, etc.
-            // Pour l'exemple, on simule l'envoi
-            Log::info("SMS envoyé au {$telephone} avec le code: {$code}");
+            $message = "Votre code de vérification est: {$code}";
+            $success = $this->smsService->sendSms($telephone, $message);
 
-            // Exemple d'intégration avec un service SMS:
-            /*
-            $response = Http::post('https://api.sms-service.com/send', [
-                'to' => $telephone,
-                'message' => "Votre code de vérification est: {$code}",
-                'from' => 'BANQUE'
-            ]);
-
-            if ($response->successful()) {
-                Log::info("SMS envoyé avec succès au {$telephone}");
+            if ($success) {
+                Log::info("SMS envoyé avec succès au {$telephone} avec le code: {$code}");
             } else {
                 Log::error("Erreur lors de l'envoi du SMS au {$telephone}");
             }
-            */
 
         } catch (\Exception $e) {
             Log::error("Erreur lors de l'envoi du SMS au {$telephone}: " . $e->getMessage());
