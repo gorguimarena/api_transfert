@@ -77,11 +77,7 @@ enum Messages: string
     case DECONNEXION_REUSSIE = 'Déconnexion réussie';
 
     // Messages de validation pour l'authentification
-    case EMAIL_OBLIGATOIRE = 'L\'adresse email est obligatoire';
-    case EMAIL_VALIDE = 'L\'adresse email doit être valide';
-    case PASSWORD_OBLIGATOIRE = 'Le mot de passe est obligatoire';
-    case PASSWORD_STRING = 'Le mot de passe doit être une chaîne de caractères';
-    case PASSWORD_MIN = 'Le mot de passe doit contenir au moins 8 caractères';
     case REMEMBER_BOOLEAN = 'Le champ remember doit être un booléen';
     case ERREUR_VALIDATION = 'Erreur de validation';
+    case ERREUR_REVOCATION_TOKEN = 'Erreur lors de la deconnexion';
 }
