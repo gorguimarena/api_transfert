@@ -500,12 +500,13 @@ class CompteController extends Controller
     /**
      * Bloquer un compte bancaire
      *
-     * Bloque un compte bancaire avec une raison et une durée optionnelle
+     * Bloque un compte bancaire épargne actif avec une raison et une durée optionnelle.
+     * Les comptes chèque ne peuvent pas être bloqués.
      *
      * @OA\Post(
      *     path="/api/v1/comptes/{compteId}/bloquer",
      *     tags={"Comptes"},
-     *     summary="Bloquer un compte",
+     *     summary="Bloquer un compte épargne",
      *     security={{"token":{}}},
      *     @OA\Parameter(
      *         name="compteId",
@@ -518,7 +519,8 @@ class CompteController extends Controller
      *         @OA\JsonContent(
      *             required={"block_reason"},
      *             @OA\Property(property="block_reason", type="string", example="Suspicion de fraude", maxLength=500),
-     *             @OA\Property(property="block_duration_days", type="integer", example=30, minimum=1, maximum=365)
+     *             @OA\Property(property="block_start_date", type="string", format="date", example="2025-10-28", description="Date de début du blocage (optionnel, défaut: aujourd'hui)"),
+     *             @OA\Property(property="block_duration_days", type="integer", example=30, minimum=1, maximum=365, description="Durée du blocage en jours (optionnel)")
      *         )
      *     ),
      *     @OA\Response(
@@ -548,10 +550,10 @@ class CompteController extends Controller
      *     ),
      *     @OA\Response(
      *         response=422,
-     *         description="Erreur de validation",
+     *         description="Erreur de validation ou compte non éligible au blocage",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Erreur de validation"),
+     *             @OA\Property(property="message", type="string", example="Seuls les comptes épargne actifs peuvent être bloqués"),
      *             @OA\Property(property="errors", type="object")
      *         )
      *     )
@@ -559,23 +561,38 @@ class CompteController extends Controller
      */
     public function bloquer(BloquerCompteRequest $request, Compte $compte)
     {
-        // Vérifier que le compte existe et n'est pas déjà bloqué
-        if ($compte->status_compte === 'bloque') {
-            return $this->errorResponse('Le compte est déjà bloqué', 422);
+        // Vérifier que le compte existe
+        if (!$compte) {
+            return $this->errorResponse('Compte non trouvé', 404);
         }
+
+        // Vérifier que le compte est actif (seulement les comptes actifs peuvent être bloqués)
+        if ($compte->status_compte !== 'active') {
+            return $this->errorResponse('Seuls les comptes actifs peuvent être bloqués', 422);
+        }
+
+        // Vérifier que c'est un compte épargne (les comptes chèque ne peuvent pas être bloqués)
+        if ($compte->type_compte !== 'epargne') {
+            return $this->errorResponse('Les comptes chèque ne peuvent pas être bloqués', 422);
+        }
+
+        // Déterminer la date de début du blocage
+        $blockStartDate = $request->has('block_start_date') && $request->block_start_date
+            ? \Carbon\Carbon::parse($request->block_start_date)
+            : now();
 
         // Calculer la date de fin de blocage si une durée est spécifiée
         $blockEndDate = null;
         if ($request->has('block_duration_days') && $request->block_duration_days) {
-            $blockEndDate = now()->addDays($request->block_duration_days);
+            $blockEndDate = $blockStartDate->copy()->addDays($request->block_duration_days);
         }
 
         // Bloquer le compte
         $compte->update([
             'status_compte' => 'bloque',
-            'blocked_at' => now(),
+            'blocked_at' => $blockStartDate,
             'block_end_date' => $blockEndDate,
-            'block_reason' => $request->block_reason,
+            'motif_blocage' => $request->block_reason,
         ]);
 
         $compte->load('client.user');
@@ -599,3 +616,4 @@ class CompteController extends Controller
         return str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
     }
 }
+

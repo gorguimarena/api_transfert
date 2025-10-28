@@ -32,6 +32,10 @@ php artisan migrate --force
 echo "Running database seeders..."
 php artisan db:seed --force
 
+# Run scheduled jobs
+echo "Running scheduled jobs..."
+php artisan jobs:run-scheduled
+
 # Generate API documentation
 echo "Generating API documentation..."
 php artisan l5-swagger:generate

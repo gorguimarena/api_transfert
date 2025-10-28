@@ -777,8 +777,8 @@
                 "tags": [
                     "Comptes"
                 ],
-                "summary": "Bloquer un compte",
-                "description": "Bloquer un compte bancaire\n\nBloque un compte bancaire avec une raison et une durée optionnelle",
+                "summary": "Bloquer un compte épargne",
+                "description": "Bloquer un compte bancaire\n\nBloque un compte bancaire épargne actif avec une raison et une durée optionnelle.\nLes comptes chèque ne peuvent pas être bloqués.",
                 "operationId": "fe2f6141c450b39f7be6854c72d7fb95",
                 "parameters": [
                     {
@@ -805,7 +805,14 @@
                                         "maxLength": 500,
                                         "example": "Suspicion de fraude"
                                     },
+                                    "block_start_date": {
+                                        "description": "Date de début du blocage (optionnel, défaut: aujourd'hui)",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-10-28"
+                                    },
                                     "block_duration_days": {
+                                        "description": "Durée du blocage en jours (optionnel)",
                                         "type": "integer",
                                         "maximum": 365,
                                         "minimum": 1,
@@ -882,7 +889,7 @@
                         }
                     },
                     "422": {
-                        "description": "Erreur de validation",
+                        "description": "Erreur de validation ou compte non éligible au blocage",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -893,7 +900,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Erreur de validation"
+                                            "example": "Seuls les comptes épargne actifs peuvent être bloqués"
                                         },
                                         "errors": {
                                             "type": "object"

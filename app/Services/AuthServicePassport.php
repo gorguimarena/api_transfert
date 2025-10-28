@@ -2,10 +2,9 @@
 
 namespace App\Services;
 
-use App\Interfaces\AuthServiceInterface;
 use App\Http\Requests\AuthRequest;
-use App\Http\Resources\Auth\LoginResource as AuthLoginResource;
-use App\Http\Resources\LoginResource;
+use App\Http\Resources\Auth\LoginResource;
+use App\Interfaces\AuthServiceInterface;
 use App\Messages;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -22,19 +21,32 @@ class AuthServicePassport implements AuthServiceInterface
      */
     public function client_exist(): array
     {
-        $clientId = env('PASSPORT_PASSWORD_CLIENT_ID');
-        $clientSecret = env('PASSPORT_PASSWORD_CLIENT_SECRET');
+        // Utiliser la configuration depuis config/services.php
+        $clientId = config('services.passport.client_id');
+        $clientSecret = config('services.passport.client_secret');
 
+        // Vérifier que la configuration est définie
+        if (!$clientId || !$clientSecret) {
+            Log::error('Configuration Passport manquante dans config/services.php', [
+                'clientId' => $clientId ? 'set' : 'missing',
+                'clientSecret' => $clientSecret ? 'set' : 'missing'
+            ]);
+            throw new \Exception('Configuration Passport manquante');
+        }
+
+        // Vérifier que le client existe en base
         $client = Client::where('id', $clientId)->first();
 
         if (!$client) {
-            Log::info("Client OAuth non trouvé, création en cours...");
+            Log::info("Client OAuth non trouvé en base, création en cours...");
             $client = $this->create_client($clientId, $clientSecret);
         }
 
-        if ($client->secret !== $clientSecret) {
-            Log::warning("Secret du client Passport incorrect !");
-        }
+        Log::info('Client OAuth configuré', [
+            'id' => $clientId,
+            'exists_in_db' => $client ? 'yes' : 'no',
+            'has_secret' => $clientSecret ? 'yes' : 'no'
+        ]);
 
         return [
             'id' => $clientId,
@@ -156,7 +168,7 @@ class AuthServicePassport implements AuthServiceInterface
     /**
      * Authentifie un utilisateur (login).
      */
-    public function login(AuthRequest $request) : array|bool
+    public function login(AuthRequest $request): array|bool
     {
         $user = User::where('email', $request->email)->first();
 
@@ -181,7 +193,7 @@ class AuthServicePassport implements AuthServiceInterface
 
         return [
             'status' => true,
-            'data' => new AuthLoginResource($user, $tokenData),
+            'data' => new LoginResource($user, $tokenData),
             'message' => Messages::CONNEXION_REUSSIE->value,
             'cookie' => $cookie
         ];
