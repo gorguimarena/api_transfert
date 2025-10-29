@@ -632,6 +632,11 @@ class CompteController extends Controller
             return $this->errorResponse('Ce compte est déjà supprimé.', 422);
         }
 
+        // Vérifier que le compte est actif
+        if ($compte->status_compte !== 'active') {
+            return $this->errorResponse('Seuls les comptes actifs peuvent être supprimés.', 422);
+        }
+
         // Marquer le compte comme supprimé (soft delete)
         $compte->update([
             'is_deleted' => true,
