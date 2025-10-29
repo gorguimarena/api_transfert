@@ -3,8 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompteController;
+use App\Http\Controllers\ClientController;
 use App\Http\Middleware\LoggingMiddleware;
 use App\Http\Middleware\AuthMiddleware;
+use App\Http\Middleware\RoleMiddleware;
 
 
 Route::middleware(['api', LoggingMiddleware::class])->group(function () {
@@ -23,11 +25,18 @@ Route::middleware(['api', LoggingMiddleware::class])->group(function () {
 
             Route::middleware(AuthMiddleware::class)->get('/', [CompteController::class, 'index']);
 
-            Route::middleware(AuthMiddleware::class)->get('/{compte}', [CompteController::class, 'show']);
+            Route::middleware(AuthMiddleware::class)->get('/numero/{numero}', [CompteController::class, 'getByNumero']);
 
-            Route::middleware(AuthMiddleware::class)->post('/', [CompteController::class, 'store']);
+            Route::middleware(AuthMiddleware::class)->get('/{compteId}', [CompteController::class, 'show']);
 
-            Route::middleware(AuthMiddleware::class)->post('/{compte}/bloquer', [CompteController::class, 'bloquer']);
+            Route::middleware([AuthMiddleware::class, RoleMiddleware::class . ':admin'])->post('/', [CompteController::class, 'store']);
+
+            Route::middleware([AuthMiddleware::class, RoleMiddleware::class . ':admin'])->post('/{compteId}/bloquer', [CompteController::class, 'bloquer']);
+        });
+
+        Route::prefix('clients')->group(function () {
+
+            Route::middleware(AuthMiddleware::class)->get('/telephone/{telephone}', [ClientController::class, 'getByTelephone']);
         });
     });
 });

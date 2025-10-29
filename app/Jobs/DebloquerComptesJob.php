@@ -28,12 +28,11 @@ class DebloquerComptesJob implements ShouldQueue
         $comptesToUnlock = Compte::where('status_compte', 'bloque')
             ->whereNotNull('block_end_date')
             ->where('block_end_date', '<=', now())
-            ->where('is_archived', false)
             ->get();
 
         foreach ($comptesToUnlock as $compte) {
             try {
-                // Débloquer le compte
+                // Débloquer le compte - remettre le statut à actif et nettoyer les champs de blocage
                 $compte->update([
                     'status_compte' => 'active',
                     'blocked_at' => null,

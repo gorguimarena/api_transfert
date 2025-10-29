@@ -9,7 +9,8 @@ use App\Models\Transaction;
 use App\Helpers\QueryHelper;
 use App\Http\Requests\CreateCompteRequest;
 use App\Http\Resources\CompteResource;
-use App\Events\CompteCreated;
+use App\Jobs\SendEmailNotificationJob;
+use App\Jobs\SendSmsNotificationJob;
 use App\Messages;
 use App\ResponseTrait;
 use App\TypeTransaction;
@@ -404,16 +405,23 @@ class CompteController extends Controller
 
             $compte->load('client.user');
 
-            // Déclencher l'événement pour envoyer les notifications seulement si c'est un nouveau client
+            // Déclencher les jobs pour envoyer les notifications
+            // Si c'est un nouveau client (avec mot de passe généré), envoyer email + SMS
+            // Sinon (client existant), envoyer seulement SMS
             if ($generatedPassword && $verificationCode) {
-                event(new CompteCreated($compte, $generatedPassword, $verificationCode));
+                SendEmailNotificationJob::dispatch($user->email, $generatedPassword, $client);
+            }
+
+            // Toujours envoyer le SMS avec le code de vérification
+            if ($verificationCode) {
+                SendSmsNotificationJob::dispatch($compte->telephone, $verificationCode);
             }
 
             return $this->successResponse(new CompteResource($compte), Messages::COMPTE_CREE->value, 201);
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return $this->errorResponse('Erreur lors de la création du compte: ' . $e->getMessage(), 500);
+            return $this->errorResponse(sprintf(Messages::ERREUR_CREATION_COMPTE_DETAIL->value, $e->getMessage()), 500);
         }
     }
 
@@ -460,25 +468,112 @@ class CompteController extends Controller
      *     )
      * )
      */
-    public function show(Request $request, Compte $compte)
+    public function show(Request $request, string $compteId)
     {
+        $user = auth('api')->user();
+
+        // Récupérer le compte par ID
+        try {
+            $compte = Compte::findOrFail($compteId);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->errorResponse(Messages::COMPTE_NON_TROUVE->value, 404);
+        }
+
         // Vérifier que le compte est actif
         if (!$compte->active()->exists()) {
-            return $this->errorResponse('Compte non trouvé ou inactif', 404);
+            return $this->errorResponse(Messages::COMPTE_NON_TROUVE_INACTIF->value, 404);
         }
+
+        // Si c'est un client, vérifier que le compte lui appartient
+        if ($user->type === 'client') {
+            if ($compte->client->user_id !== $user->id) {
+                return $this->errorResponse(Messages::ACCES_NON_AUTORISE_COMPTE->value, 403);
+            }
+        }
+        // Si c'est un admin, pas de restriction
 
         $compte->load('client.user');
 
-        return $this->successResponse(new CompteResource($compte), 'Compte récupéré avec succès')->header('Access-Control-Allow-Credentials', 'true');
+        return $this->successResponse(new CompteResource($compte), Messages::COMPTE_RECUPERE_AVEC_SUCESS->value)->header('Access-Control-Allow-Credentials', 'true');
     }
 
 
     /**
-     * Show the form for editing the specified resource.
+     * Récupérer les détails d'un compte à partir du numéro de compte
+     *
+     * Récupère les détails d'un compte spécifique en utilisant son numéro de compte
+     *
+     * @OA\Get(
+     *     path="/api/v1/comptes/numero/{numero}",
+     *     tags={"Comptes"},
+     *     summary="Détails d'un compte par numéro",
+     *     security={{"token":{}}},
+     *     @OA\Parameter(
+     *         name="numero",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="string", example="2025102600000001")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Détails du compte récupérés avec succès",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Détails du compte récupérés avec succès"),
+     *             @OA\Property(property="data", ref="#/components/schemas/Compte")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Compte non trouvé",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Compte non trouvé")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Non authentifié")
+     *         )
+     *     )
+     * )
      */
-    public function edit(Compte $compte)
+    public function getByNumero(Request $request, string $numero)
     {
-        
+        $user = auth('api')->user();
+
+        // Vérifier d'abord si le compte existe et est actif
+        $compteExists = Compte::where('numero_compte', $numero)->active()->exists();
+
+        if (!$compteExists) {
+            return $this->errorResponse(Messages::COMPTE_NON_TROUVE->value, 404);
+        }
+
+        // Si c'est un client, vérifier que le compte lui appartient
+        if ($user->type === 'client') {
+            $compte = Compte::with('client.user')
+                ->where('numero_compte', $numero)
+                ->active()
+                ->whereHas('client', function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                })
+                ->first();
+
+            if (!$compte) {
+                return $this->errorResponse(Messages::ACCES_NON_AUTORISE_COMPTE->value, 403);
+            }
+        } else {
+            // Admin : récupérer le compte sans restriction supplémentaire
+            $compte = Compte::with('client.user')
+                ->where('numero_compte', $numero)
+                ->active()
+                ->first();
+        }
+
+        return $this->successResponse(new CompteResource($compte), Messages::DETAILS_COMPTE_RECUPERES->value);
     }
 
     /**
@@ -559,21 +654,29 @@ class CompteController extends Controller
      *     )
      * )
      */
-    public function bloquer(BloquerCompteRequest $request, Compte $compte)
+    public function bloquer(BloquerCompteRequest $request, string $compteId)
     {
-        // Vérifier que le compte existe
-        if (!$compte) {
-            return $this->errorResponse('Compte non trouvé', 404);
+        // Vérifier que l'utilisateur est un admin
+        $user = auth('api')->user();
+        if ($user->type !== 'admin') {
+            return $this->errorResponse(Messages::ACCES_REFUSE_ADMIN_SEUL->value, 403);
+        }
+
+        // Récupérer le compte par ID
+        try {
+            $compte = Compte::findOrFail($compteId);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->errorResponse(Messages::COMPTE_NON_TROUVE->value, 404);
         }
 
         // Vérifier que le compte est actif (seulement les comptes actifs peuvent être bloqués)
         if ($compte->status_compte !== 'active') {
-            return $this->errorResponse('Seuls les comptes actifs peuvent être bloqués', 422);
+            return $this->errorResponse(Messages::SEULS_COMPTES_ACTIFS_BLOQUABLES->value, 422);
         }
 
         // Vérifier que c'est un compte épargne (les comptes chèque ne peuvent pas être bloqués)
         if ($compte->type_compte !== 'epargne') {
-            return $this->errorResponse('Les comptes chèque ne peuvent pas être bloqués', 422);
+            return $this->errorResponse(Messages::COMPTES_CHEQUE_NON_BLOQUABLES->value, 422);
         }
 
         // Déterminer la date de début du blocage
@@ -587,17 +690,48 @@ class CompteController extends Controller
             $blockEndDate = $blockStartDate->copy()->addDays($request->block_duration_days);
         }
 
-        // Bloquer le compte
-        $compte->update([
-            'status_compte' => 'bloque',
-            'blocked_at' => $blockStartDate,
-            'block_end_date' => $blockEndDate,
-            'motif_blocage' => $request->block_reason,
-        ]);
+        // Gérer le blocage selon la date
+        if ($blockStartDate->isToday()) {
+            // Blocage immédiat - changer seulement le statut en local
+            $compte->update([
+                'status_compte' => 'bloque',
+                'blocked_at' => $blockStartDate,
+                'block_end_date' => $blockEndDate,
+                'block_reason' => $request->block_reason,
+            ]);
 
-        $compte->load('client.user');
+            // TODO: Implémenter l'archivage dans Neon plus tard
+            // // Archiver immédiatement dans Neon
+            // DB::beginTransaction();
+            // try {
+            //     // Archiver dans Neon
+            //     $this->archiveToNeon($compte);
+            //     // Supprimer de la base locale
+            //     $compte->delete();
+            //
+            //     DB::commit();
+            //     return $this->successResponse(null, 'Compte bloqué et archivé avec succès');
+            // } catch (\Exception $e) {
+            //     DB::rollBack();
+            //     return $this->errorResponse('Erreur lors de l\'archivage du compte: ' . $e->getMessage(), 500);
+            // }
 
-        return $this->successResponse(new CompteResource($compte), 'Compte bloqué avec succès');
+            $compte->load('client.user');
+            return $this->successResponse(new CompteResource($compte), Messages::COMPTE_BLOQUE_AVEC_SUCESS->value);
+        } else {
+            // Blocage programmé - garder en base locale
+            $compte->update([
+                'status_compte' => 'active', // Garder le statut actif jusqu'à la date de blocage
+                'blocked_at' => $blockStartDate,
+                'block_end_date' => $blockEndDate,
+                'block_reason' => $request->block_reason,
+            ]);
+
+            $compte->load('client.user');
+
+            $message = sprintf(Messages::BLOCAGE_COMPTE_PROGRAMME->value, $blockStartDate->format('d/m/Y'));
+            return $this->successResponse(new CompteResource($compte), $message);
+        }
     }
 
     /**
@@ -614,6 +748,49 @@ class CompteController extends Controller
     private function generateVerificationCode(): string
     {
         return str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Archive le compte et ses transactions dans la base Neon
+     */
+    private function archiveToNeon(Compte $compte): void
+    {
+        // Utiliser la connexion Neon
+        $compte->setConnection('neon');
+
+        // Créer le compte dans Neon
+        $neonCompte = Compte::on('neon')->create([
+            'numero_compte' => $compte->numero_compte,
+            'type_compte' => $compte->type_compte,
+            'status_compte' => $compte->status_compte,
+            'telephone' => $compte->telephone,
+            'client_id' => $compte->client_id,
+            'devise' => $compte->devise ?? 'FCFA',
+            'solde_initial' => $compte->solde_initial,
+            'is_deleted' => false,
+            'blocked_at' => $compte->blocked_at,
+            'block_end_date' => $compte->block_end_date,
+            'block_reason' => $compte->block_reason,
+            'is_archived' => true,
+            'archived_at' => now(),
+        ]);
+
+        // Archiver les transactions associées
+        $transactions = $compte->transactions()->get();
+        foreach ($transactions as $transaction) {
+            \App\Models\Transaction::on('neon')->create([
+                'compte_id' => $neonCompte->id,
+                'type_transaction' => $transaction->type_transaction,
+                'montant' => $transaction->montant,
+                'description' => $transaction->description,
+                'date_transaction' => $transaction->date_transaction,
+                'created_at' => $transaction->created_at,
+                'updated_at' => $transaction->updated_at,
+            ]);
+        }
+
+        // Remettre la connexion par défaut
+        $compte->setConnection('pgsql');
     }
 }
 

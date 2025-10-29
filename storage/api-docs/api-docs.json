@@ -277,6 +277,97 @@
                 ]
             }
         },
+        "/api/v1/clients/telephone/{telephone}": {
+            "get": {
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Récupérer un client par numéro de téléphone",
+                "description": "Récupérer un client à partir de son numéro de téléphone\n\nRécupère les informations d'un client en utilisant son numéro de téléphone",
+                "operationId": "1441a94b41fd6bcf14fb93c982deef49",
+                "parameters": [
+                    {
+                        "name": "telephone",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "+221771234567"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Client trouvé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Client trouvé avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/ClientDetails"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Client non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Client non trouvé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Non authentifié"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "token": []
+                    }
+                ]
+            }
+        },
         "/api/v1/comptes": {
             "get": {
                 "tags": [
@@ -772,6 +863,97 @@
                 ]
             }
         },
+        "/api/v1/comptes/numero/{numero}": {
+            "get": {
+                "tags": [
+                    "Comptes"
+                ],
+                "summary": "Détails d'un compte par numéro",
+                "description": "Récupérer les détails d'un compte à partir du numéro de compte\n\nRécupère les détails d'un compte spécifique en utilisant son numéro de compte",
+                "operationId": "c9e3d7bb8a6cc7e40f3df86287ddc792",
+                "parameters": [
+                    {
+                        "name": "numero",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "2025102600000001"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détails du compte récupérés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Détails du compte récupérés avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Compte"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Compte non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Compte non trouvé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Non authentifié"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "token": []
+                    }
+                ]
+            }
+        },
         "/api/v1/comptes/{compteId}/bloquer": {
             "post": {
                 "tags": [
@@ -922,6 +1104,42 @@
     },
     "components": {
         "schemas": {
+            "ClientDetails": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "nom": {
+                        "type": "string",
+                        "example": "Diallo"
+                    },
+                    "prenom": {
+                        "type": "string",
+                        "example": "Amadou"
+                    },
+                    "nci": {
+                        "type": "string",
+                        "example": "1234567890123"
+                    },
+                    "adresse": {
+                        "type": "string",
+                        "example": "Dakar, Sénégal"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
             "Compte": {
                 "properties": {
                     "id": {
@@ -1064,6 +1282,10 @@
         {
             "name": "Authentification",
             "description": "Authentification"
+        },
+        {
+            "name": "Clients",
+            "description": "Clients"
         },
         {
             "name": "Comptes",

@@ -36,6 +36,21 @@ php artisan db:seed --force
 echo "Running scheduled jobs..."
 php artisan jobs:run-scheduled
 
+# Start queue workers for different queues
+echo "Starting queue workers..."
+
+# Worker for default queue (general jobs)
+php artisan queue:work --queue=default --tries=3 --timeout=90 --sleep=3 --max-jobs=1000 &
+
+# Worker for email notifications
+php artisan queue:work --queue=emails --tries=3 --timeout=90 --sleep=3 --max-jobs=1000 &
+
+# Worker for SMS notifications
+php artisan queue:work --queue=sms --tries=3 --timeout=90 --sleep=3 --max-jobs=1000 &
+
+# Worker for notifications (fallback)
+php artisan queue:work --queue=notifications --tries=3 --timeout=90 --sleep=3 --max-jobs=1000 &
+
 # Generate API documentation
 echo "Generating API documentation..."
 php artisan l5-swagger:generate
@@ -48,6 +63,10 @@ php artisan route:clear
 php artisan route:cache
 php artisan view:clear
 php artisan view:cache
+
+# Start Laravel scheduler in background (for cron jobs)
+echo "Starting Laravel scheduler..."
+php artisan schedule:work &
 
 # Start Laravel server
 echo "Starting Laravel server..."

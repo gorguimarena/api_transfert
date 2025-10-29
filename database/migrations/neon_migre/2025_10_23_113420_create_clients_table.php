@@ -13,8 +13,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('clients', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
-            $table->foreignUuid('user_id')->references('id')->on('users');
+            $table->uuid('id');
+            $table->uuid('user_id');
             $table->string('nom')->nullable();
             $table->string('prenom')->nullable();
             $table->string('nci')->nullable();

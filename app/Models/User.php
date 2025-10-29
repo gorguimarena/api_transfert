@@ -25,6 +25,16 @@ class User extends Authenticatable
         return $this->hasOne(Admin::class);
     }
 
+
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (! $model->id) {
+                $model->id = \Illuminate\Support\Str::uuid();
+            }
+        });
+    }
+
     /**
      * The attributes that are mass assignable.
      *
