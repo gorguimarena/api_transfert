@@ -412,20 +412,6 @@
                         }
                     },
                     {
-                        "name": "statut",
-                        "in": "query",
-                        "description": "Filtrer par statut du compte",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "active",
-                                "bloque"
-                            ],
-                            "example": "active"
-                        }
-                    },
-                    {
                         "name": "sort",
                         "in": "query",
                         "description": "Champ de tri",
@@ -939,6 +925,94 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Non authentifié"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "token": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/comptes/{compteId}": {
+            "delete": {
+                "tags": [
+                    "Comptes"
+                ],
+                "summary": "Supprimer un compte (soft delete)",
+                "description": "Supprimer un compte (soft delete - marquer comme supprimé)\n\nMarque un compte comme supprimé (is_deleted = true). Seuls les admins peuvent effectuer cette action.",
+                "operationId": "7bc9431c9cb3f6c5524d461a5b8d2389",
+                "parameters": [
+                    {
+                        "name": "compteId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Compte supprimé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Compte supprimé avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Accès refusé - Seuls les admins peuvent supprimer des comptes",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Accès refusé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Compte non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Compte non trouvé"
                                         }
                                     },
                                     "type": "object"

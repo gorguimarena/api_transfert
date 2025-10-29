@@ -32,6 +32,8 @@ Route::middleware(['api', LoggingMiddleware::class])->group(function () {
             Route::middleware([AuthMiddleware::class, RoleMiddleware::class . ':admin'])->post('/', [CompteController::class, 'store']);
 
             Route::middleware([AuthMiddleware::class, RoleMiddleware::class . ':admin'])->post('/{compteId}/bloquer', [CompteController::class, 'bloquer']);
+
+            Route::middleware([AuthMiddleware::class, RoleMiddleware::class . ':admin'])->delete('/{compteId}', [CompteController::class, 'destroy']);
         });
 
         Route::prefix('clients')->group(function () {

@@ -104,10 +104,7 @@ class CompteController extends Controller
             'field' => 'type_compte',
             'request_key' => 'type'
         ],
-        [
-            'field' => 'status_compte',
-            'request_key' => 'statut'
-        ]
+        // Filtre par statut supprimé - seulement les comptes actifs sont affichés
     ];
 
     // Mapping des champs de tri
@@ -148,17 +145,6 @@ class CompteController extends Controller
      *             type="string",
      *             enum={"epargne", "cheque"},
      *             example="cheque"
-     *         )
-     *     ),
-     *     @OA\Parameter(
-     *         name="statut",
-     *         in="query",
-     *         description="Filtrer par statut du compte",
-     *         required=false,
-     *         @OA\Schema(
-     *             type="string",
-     *             enum={"active", "bloque"},
-     *             example="active"
      *         )
      *     ),
      *     @OA\Parameter(
@@ -585,11 +571,74 @@ class CompteController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Supprimer un compte (soft delete - marquer comme supprimé)
+     *
+     * Marque un compte comme supprimé (is_deleted = true). Seuls les admins peuvent effectuer cette action.
+     *
+     * @OA\Delete(
+     *     path="/api/v1/comptes/{compteId}",
+     *     tags={"Comptes"},
+     *     summary="Supprimer un compte (soft delete)",
+     *     security={{"token":{}}},
+     *     @OA\Parameter(
+     *         name="compteId",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="string", format="uuid")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Compte supprimé avec succès",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Compte supprimé avec succès")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Accès refusé - Seuls les admins peuvent supprimer des comptes",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Accès refusé")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Compte non trouvé",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Compte non trouvé")
+     *         )
+     *     )
+     * )
      */
-    public function destroy(Compte $compte)
+    public function destroy(string $compteId)
     {
-        //
+        // Vérifier que l'utilisateur est un admin
+        $user = auth('api')->user();
+        if ($user->type !== 'admin') {
+            return $this->errorResponse('Accès refusé. Seuls les administrateurs peuvent supprimer des comptes.', 403);
+        }
+
+        // Récupérer le compte par ID
+        try {
+            $compte = Compte::findOrFail($compteId);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->errorResponse(Messages::COMPTE_NON_TROUVE->value, 404);
+        }
+
+        // Vérifier que le compte n'est pas déjà supprimé
+        if ($compte->is_deleted) {
+            return $this->errorResponse('Ce compte est déjà supprimé.', 422);
+        }
+
+        // Marquer le compte comme supprimé (soft delete)
+        $compte->update([
+            'is_deleted' => true,
+            'deleted_at' => now(),
+        ]);
+
+        return $this->successResponse(null, 'Compte supprimé avec succès');
     }
 
     /**
