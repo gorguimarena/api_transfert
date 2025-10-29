@@ -460,9 +460,16 @@ class CompteController extends Controller
      *     )
      * )
      */
-    public function show(Request $request, Compte $compte)
+    public function show(Request $request, string $compteId)
     {
         $user = auth('api')->user();
+
+        // Récupérer le compte par ID
+        try {
+            $compte = Compte::findOrFail($compteId);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->errorResponse(Messages::COMPTE_NON_TROUVE->value, 404);
+        }
 
         // Vérifier que le compte est actif
         if (!$compte->active()->exists()) {
@@ -530,22 +537,32 @@ class CompteController extends Controller
     {
         $user = auth('api')->user();
 
-        $query = Compte::with('client.user')
-            ->where('numero_compte', $numero)
-            ->active();
+        // Vérifier d'abord si le compte existe et est actif
+        $compteExists = Compte::where('numero_compte', $numero)->active()->exists();
+
+        if (!$compteExists) {
+            return $this->errorResponse(Messages::COMPTE_NON_TROUVE->value, 404);
+        }
 
         // Si c'est un client, vérifier que le compte lui appartient
         if ($user->type === 'client') {
-            $query->whereHas('client', function ($q) use ($user) {
-                $q->where('user_id', $user->id);
-            });
-        }
-        // Si c'est un admin, pas de restriction supplémentaire (forUser() gère déjà les comptes actifs)
+            $compte = Compte::with('client.user')
+                ->where('numero_compte', $numero)
+                ->active()
+                ->whereHas('client', function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                })
+                ->first();
 
-        $compte = $query->first();
-
-        if (!$compte) {
-            return $this->errorResponse(Messages::COMPTE_NON_TROUVE_ACCES_NON_AUTORISE->value, 404);
+            if (!$compte) {
+                return $this->errorResponse(Messages::ACCES_NON_AUTORISE_COMPTE->value, 403);
+            }
+        } else {
+            // Admin : récupérer le compte sans restriction supplémentaire
+            $compte = Compte::with('client.user')
+                ->where('numero_compte', $numero)
+                ->active()
+                ->first();
         }
 
         return $this->successResponse(new CompteResource($compte), Messages::DETAILS_COMPTE_RECUPERES->value);
@@ -629,7 +646,7 @@ class CompteController extends Controller
      *     )
      * )
      */
-    public function bloquer(BloquerCompteRequest $request, Compte $compte)
+    public function bloquer(BloquerCompteRequest $request, string $compteId)
     {
         // Vérifier que l'utilisateur est un admin
         $user = auth('api')->user();
@@ -637,8 +654,10 @@ class CompteController extends Controller
             return $this->errorResponse(Messages::ACCES_REFUSE_ADMIN_SEUL->value, 403);
         }
 
-        // Vérifier que le compte existe
-        if (!$compte) {
+        // Récupérer le compte par ID
+        try {
+            $compte = Compte::findOrFail($compteId);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return $this->errorResponse(Messages::COMPTE_NON_TROUVE->value, 404);
         }
 

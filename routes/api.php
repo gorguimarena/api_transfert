@@ -26,11 +26,11 @@ Route::middleware(['api', LoggingMiddleware::class])->group(function () {
 
             Route::middleware(AuthMiddleware::class)->get('/numero/{numero}', [CompteController::class, 'getByNumero']);
 
-            Route::middleware(AuthMiddleware::class)->get('/{compte}', [CompteController::class, 'show']);
+            Route::middleware(AuthMiddleware::class)->get('/{compteId}', [CompteController::class, 'show']);
 
             Route::middleware([AuthMiddleware::class, RoleMiddleware::class . ':admin'])->post('/', [CompteController::class, 'store']);
 
-            Route::middleware([AuthMiddleware::class, RoleMiddleware::class . ':admin'])->post('/{compte}/bloquer', [CompteController::class, 'bloquer']);
+            Route::middleware([AuthMiddleware::class, RoleMiddleware::class . ':admin'])->post('/{compteId}/bloquer', [CompteController::class, 'bloquer']);
         });
 
         Route::prefix('clients')->group(function () {
