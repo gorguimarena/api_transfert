@@ -41,7 +41,7 @@ class CreateCompteRequest extends FormRequest
             'client.titulaire' => 'required|string|max:255',
             'client.nci' => ['nullable', new NciRule()],
             'client.email' => 'required|email|unique:users,email',
-            'client.telephone' => ['required', new TelephoneRule()],
+            'client.telephone' => ['required', new TelephoneRule(), 'unique:comptes,telephone'],
             'client.adresse' => 'nullable|string|max:500',
         ];
 
@@ -68,6 +68,7 @@ class CreateCompteRequest extends FormRequest
             'client.email.email' => Messages::EMAIL_VALIDE->value,
             'client.email.unique' => Messages::EMAIL_UNIQUE->value,
             'client.telephone.required' => Messages::TELEPHONE_OBLIGATOIRE->value,
+            'client.telephone.unique' => 'Ce numéro de téléphone est déjà utilisé par un autre compte',
             'client.adresse.string' => Messages::ADRESSE_STRING->value,
             'client.adresse.max' => Messages::ADRESSE_MAX->value,
         ];

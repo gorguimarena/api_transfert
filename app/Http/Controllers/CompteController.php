@@ -382,7 +382,7 @@ class CompteController extends Controller
 
             // Créer le compte
             $compte = Compte::create([
-                'numero_compte' => Compte::generateNumeroCompte(),
+                'numero_compte' => Compte::generateNumeroCompteWithNeonCheck(),
                 'type_compte' => $request->type,
                 'status_compte' => 'active',
                 'telephone' => $request->client['telephone'],

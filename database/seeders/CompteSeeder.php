@@ -53,6 +53,22 @@ class CompteSeeder extends Seeder
                 'devise' => 'USD',
                 'motif_blocage' => null,
             ],
+            [
+                'type' => 'epargne',
+                'status' => 'active',
+                'solde_initial' => 750000,
+                'telephone' => '+221704567890',
+                'devise' => 'FCFA',
+                'motif_blocage' => null,
+            ],
+            [
+                'type' => 'epargne',
+                'status' => 'active',
+                'solde_initial' => 1800000,
+                'telephone' => '+221755678901',
+                'devise' => 'EUR',
+                'motif_blocage' => null,
+            ],
             // Comptes chèque actifs
             [
                 'type' => 'cheque',
@@ -68,6 +84,22 @@ class CompteSeeder extends Seeder
                 'solde_initial' => 1500000,
                 'telephone' => '+221785678901',
                 'devise' => 'EUR',
+                'motif_blocage' => null,
+            ],
+            [
+                'type' => 'cheque',
+                'status' => 'active',
+                'solde_initial' => 2200000,
+                'telephone' => '+221766789012',
+                'devise' => 'USD',
+                'motif_blocage' => null,
+            ],
+            [
+                'type' => 'cheque',
+                'status' => 'active',
+                'solde_initial' => 950000,
+                'telephone' => '+221777890123',
+                'devise' => 'FCFA',
                 'motif_blocage' => null,
             ],
             // Comptes épargne bloqués
@@ -95,6 +127,39 @@ class CompteSeeder extends Seeder
                 'devise' => 'USD',
                 'motif_blocage' => 'Solde insuffisant',
             ],
+            [
+                'type' => 'epargne',
+                'status' => 'bloque',
+                'solde_initial' => 450000,
+                'telephone' => '+221779012345',
+                'devise' => 'FCFA',
+                'motif_blocage' => 'Demande du client',
+            ],
+            [
+                'type' => 'epargne',
+                'status' => 'bloque',
+                'solde_initial' => 650000,
+                'telephone' => '+221780123456',
+                'devise' => 'EUR',
+                'motif_blocage' => 'Décès du titulaire',
+            ],
+            // Comptes chèque bloqués (nouveau)
+            [
+                'type' => 'cheque',
+                'status' => 'bloque',
+                'solde_initial' => 200000,
+                'telephone' => '+221781234567',
+                'devise' => 'FCFA',
+                'motif_blocage' => 'Suspicion de fraude',
+            ],
+            [
+                'type' => 'cheque',
+                'status' => 'bloque',
+                'solde_initial' => 950000,
+                'telephone' => '+221782345678',
+                'devise' => 'EUR',
+                'motif_blocage' => 'Inactivité prolongée',
+            ],
         ];
 
         $compteIndex = 0;
@@ -109,7 +174,7 @@ class CompteSeeder extends Seeder
                 }
 
                 $compteData = $comptesData[$compteIndex];
-                $numero = now()->format('Ymd') . str_pad($compteIndex + 1, 8, '0', STR_PAD_LEFT);
+                $numero = Compte::generateNumeroCompteWithNeonCheck();
 
                 $compte = Compte::create([
                     'numero_compte' => $numero,
@@ -138,7 +203,7 @@ class CompteSeeder extends Seeder
                 $numComptesAleatoires = rand(1, 2);
 
                 for ($i = 0; $i < $numComptesAleatoires; $i++) {
-                    $numero = now()->format('Ymd') . str_pad(mt_rand(10000000, 99999999), 8, '0', STR_PAD_LEFT);
+                    $numero = Compte::generateNumeroCompteWithNeonCheck();
                     $status = rand(0, 9) < 8 ? 'active' : 'bloque'; // 80% active, 20% bloque
                     $motifBlocage = null;
 

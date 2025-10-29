@@ -109,4 +109,29 @@ class Compte extends Model
 
         return $numero;
     }
+
+    /**
+     * Génère un numéro de compte unique en vérifiant aussi dans la base Neon
+     */
+    public static function generateNumeroCompteWithNeonCheck(): string
+    {
+        do {
+            $numero = self::generateNumeroCompte();
+
+            // Vérifier dans la base locale
+            $existsLocal = self::where('numero_compte', $numero)->exists();
+
+            // Vérifier dans la base Neon (seulement si la connexion existe)
+            $existsNeon = false;
+            try {
+                $existsNeon = self::on('neon')->where('numero_compte', $numero)->exists();
+            } catch (\Exception $e) {
+                // Si la connexion Neon n'existe pas ou la table n'existe pas, ignorer
+                $existsNeon = false;
+            }
+
+        } while ($existsLocal || $existsNeon);
+
+        return $numero;
+    }
 }
