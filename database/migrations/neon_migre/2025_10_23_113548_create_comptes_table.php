@@ -13,12 +13,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('comptes', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
+            $table->uuid('id');
             $table->string('numero_compte');
             $table->enum('type_compte', ['epargne', 'cheque']);
             $table->enum('status_compte', ['active', 'bloque']);
             $table->string('telephone');
-            $table->foreignUuid('client_id')->references('id')->on('clients')->onDelete('cascade');
+            $table->uuid('client_id');
+            $table->boolean('is_deleted');
+            $table->timestamp('blocked_at')->nullable();
+            $table->timestamp('block_end_date')->nullable();
+            $table->string('block_reason')->nullable();
+            $table->boolean('is_archived')->default(false);
+            $table->timestamp('archived_at')->nullable();
+            $table->string('devise')->default('FCFA')->after('telephone');
+            $table->string('motif_blocage')->nullable()->after('status_compte');
             $table->timestamps();
         });
     }

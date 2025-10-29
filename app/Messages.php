@@ -80,4 +80,20 @@ enum Messages: string
     case REMEMBER_BOOLEAN = 'Le champ remember doit être un booléen';
     case ERREUR_VALIDATION = 'Erreur de validation';
     case ERREUR_REVOCATION_TOKEN = 'Erreur lors de la deconnexion';
+
+    // Messages pour le blocage de comptes
+    case ACCES_REFUSE_ADMIN_SEUL = 'Accès refusé. Seuls les administrateurs peuvent bloquer des comptes.';
+    case COMPTE_BLOQUE_AVEC_SUCESS = 'Compte bloqué avec succès';
+    case BLOCAGE_COMPTE_PROGRAMME = 'Blocage du compte programmé le %s avec succès';
+
+    // Messages d'erreur pour les comptes
+    case COMPTE_NON_TROUVE_INACTIF = 'Compte non trouvé ou inactif';
+    case ACCES_NON_AUTORISE_COMPTE = 'Accès non autorisé à ce compte';
+    case COMPTE_NON_TROUVE_ACCES_NON_AUTORISE = 'Compte non trouvé ou accès non autorisé';
+    case COMPTE_NON_TROUVE = 'Compte non trouvé';
+    case SEULS_COMPTES_ACTIFS_BLOQUABLES = 'Seuls les comptes actifs peuvent être bloqués';
+    case COMPTES_CHEQUE_NON_BLOQUABLES = 'Les comptes chèque ne peuvent pas être bloqués';
+    case ERREUR_CREATION_COMPTE_DETAIL = 'Erreur lors de la création du compte: %s';
+    case DETAILS_COMPTE_RECUPERES = 'Détails du compte récupérés avec succès';
+    case COMPTE_RECUPERE_AVEC_SUCESS = 'Compte récupéré avec succès';
 }

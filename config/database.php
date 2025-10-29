@@ -108,7 +108,7 @@ return [
             'password' => env('NEON_DB_PASSWORD'),
             'charset' => 'utf8',
             'prefix' => '',
-            'prefix_indexes' => true,
+            'prefix_indexes' => false,
             'search_path' => 'public',
             'sslmode' => 'require',
         ],

@@ -13,10 +13,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('transactions', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
+            $table->uuid('id');
             $table->decimal('montant', 15, 2);
             $table->enum('type_transaction', ['depot', 'retrait']);
-            $table->foreignUuid('compte_id')->references('id')->on('comptes')->onDelete('cascade');
+            $table->uuid('compte_id');
             $table->timestamps();
         });
     }
