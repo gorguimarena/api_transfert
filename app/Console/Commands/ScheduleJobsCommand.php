@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Jobs\ArchiveComptesJob;
 use App\Jobs\DebloquerComptesJob;
 use App\Jobs\RestoreComptesJob;
+use App\Jobs\ReviewFailedJobs;
 use Illuminate\Console\Command;
 
 class ScheduleJobsCommand extends Command
@@ -41,6 +42,10 @@ class ScheduleJobsCommand extends Command
         // Exécuter le job de restauration des comptes depuis Neon
         $this->info('Restauration des comptes archivés dont la période de blocage est terminée...');
         RestoreComptesJob::dispatch();
+
+        // Exécuter le job de revue des jobs échoués
+        $this->info('Revue et traitement des jobs de notification échoués...');
+        ReviewFailedJobs::dispatch();
 
         $this->info('Tous les jobs quotidiens exécutés avec succès!');
     }

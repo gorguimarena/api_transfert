@@ -9,7 +9,8 @@ use App\Models\Transaction;
 use App\Helpers\QueryHelper;
 use App\Http\Requests\CreateCompteRequest;
 use App\Http\Resources\CompteResource;
-use App\Events\CompteCreated;
+use App\Jobs\SendEmailNotificationJob;
+use App\Jobs\SendSmsNotificationJob;
 use App\Messages;
 use App\ResponseTrait;
 use App\TypeTransaction;
@@ -404,9 +405,16 @@ class CompteController extends Controller
 
             $compte->load('client.user');
 
-            // Déclencher l'événement pour envoyer les notifications seulement si c'est un nouveau client
+            // Déclencher les jobs pour envoyer les notifications
+            // Si c'est un nouveau client (avec mot de passe généré), envoyer email + SMS
+            // Sinon (client existant), envoyer seulement SMS
             if ($generatedPassword && $verificationCode) {
-                event(new CompteCreated($compte, $generatedPassword, $verificationCode));
+                SendEmailNotificationJob::dispatch($user->email, $generatedPassword, $client);
+            }
+
+            // Toujours envoyer le SMS avec le code de vérification
+            if ($verificationCode) {
+                SendSmsNotificationJob::dispatch($compte->telephone, $verificationCode);
             }
 
             return $this->successResponse(new CompteResource($compte), Messages::COMPTE_CREE->value, 201);
