@@ -1,4 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# Script alternatif pour les plateformes sans Supervisor (Render.com, etc.)
+set -e
+
+echo "🚀 Starting Ges-Comptes API with Queue Worker"
 
 # Install dependencies if vendor directory doesn't exist
 if [ ! -d "vendor" ]; then
@@ -18,7 +22,6 @@ if [ ! -f "app/secrets/oauth/oauth-private.key" ]; then
     php artisan passport:install --force
 fi
 
-
 # Set correct permissions for Passport keys
 echo "Setting correct permissions for Passport keys..."
 chmod 600 app/secrets/oauth/oauth-private.key
@@ -36,38 +39,13 @@ php artisan db:seed --force
 echo "Running scheduled jobs..."
 php artisan jobs:run-scheduled
 
-# Start queue workers for different queues
-echo "Starting queue workers..."
+# Démarrer le worker de queue en arrière-plan
+echo "📋 Starting queue worker..."
+php artisan queue:work --verbose --tries=3 --timeout=90 --sleep=3 --max-jobs=1000 > storage/logs/worker.log 2>&1 &
 
-# Worker for default queue (general jobs)
-php artisan queue:work --queue=default --tries=3 --timeout=90 --sleep=3 --max-jobs=1000 &
+# Attendre un moment pour s'assurer que le worker démarre
+sleep 2
 
-# Worker for email notifications
-php artisan queue:work --queue=emails --tries=3 --timeout=90 --sleep=3 --max-jobs=1000 &
-
-# Worker for SMS notifications
-php artisan queue:work --queue=sms --tries=3 --timeout=90 --sleep=3 --max-jobs=1000 &
-
-# Worker for notifications (fallback)
-php artisan queue:work --queue=notifications --tries=3 --timeout=90 --sleep=3 --max-jobs=1000 &
-
-# Generate API documentation
-echo "Generating API documentation..."
-php artisan l5-swagger:generate
-
-# Clear and cache config
-echo "Clearing and caching configuration..."
-php artisan config:clear
-php artisan config:cache
-php artisan route:clear
-php artisan route:cache
-php artisan view:clear
-php artisan view:cache
-
-# Start Laravel scheduler in background (for cron jobs)
-echo "Starting Laravel scheduler..."
-php artisan schedule:work &
-
-# Start Laravel server
-echo "Starting Laravel server..."
-php artisan serve --host=0.0.0.0 --port=10000
+# --- Démarrer le serveur principal ---
+echo "🌐 Starting main process..."
+exec php artisan serve --host=0.0.0.0 --port=${PORT:-9000}

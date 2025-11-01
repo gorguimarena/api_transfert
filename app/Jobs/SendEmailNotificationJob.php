@@ -41,6 +41,16 @@ class SendEmailNotificationJob implements ShouldQueue
             return;
         }
 
+        // Vérifier que les credentials Gmail sont configurés
+        if (!config('services.gmail.username') || !config('services.gmail.password')) {
+            Log::error("Credentials Gmail non configurés dans services.php - envoi simulé", [
+                'email' => $this->email,
+                'gmail_username' => config('services.gmail.username') ? 'configured' : 'missing',
+                'gmail_password' => config('services.gmail.password') ? 'configured' : 'missing'
+            ]);
+            return;
+        }
+
         // Utiliser un lock pour éviter les chevauchements
         $lockKey = "email_notification_{$this->email}";
         $lock = Cache::lock($lockKey, 300); // Lock pour 5 minutes
@@ -55,11 +65,9 @@ class SendEmailNotificationJob implements ShouldQueue
                 'email' => $this->email,
                 'client_nom' => $this->client->nom,
                 'client_prenom' => $this->client->prenom,
-                'mail_mailer' => config('mail.default'),
-                'mail_host' => config('mail.mailers.smtp.host'),
-                'mail_port' => config('mail.mailers.smtp.port'),
-                'mail_username' => config('mail.mailers.smtp.username') ? 'configured' : 'missing',
-                'mail_from' => config('mail.from.address')
+                'gmail_username' => config('services.gmail.username'),
+                'gmail_from' => config('services.gmail.from_address'),
+                'mail_mailer' => config('mail.default')
             ]);
 
             $subject = "Création de votre compte bancaire - {$this->client->prenom} {$this->client->nom}";
@@ -68,7 +76,7 @@ class SendEmailNotificationJob implements ShouldQueue
             Mail::raw($body, function ($message) use ($subject) {
                 $message->to($this->email)
                         ->subject($subject)
-                        ->from(config('mail.from.address'), config('mail.from.name'));
+                        ->from(config('services.gmail.from_address'), config('services.gmail.from_name'));
             });
 
             Log::info("Email envoyé avec succès à {$this->email}");

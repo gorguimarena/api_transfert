@@ -39,7 +39,7 @@ class CreateCompteRequest extends FormRequest
             'client' => 'required|array',
             'client.id' => 'nullable|uuid|exists:users,id',
             'client.titulaire' => 'required|string|max:255',
-            'client.nci' => ['nullable', new NciRule()],
+            'client.nci' => ['required', 'string', new NciRule()],
             'client.email' => 'required|email|unique:users,email',
             'client.telephone' => ['required', new TelephoneRule()],
             'client.adresse' => 'nullable|string|max:500',
@@ -68,6 +68,9 @@ class CreateCompteRequest extends FormRequest
             'client.email.email' => Messages::EMAIL_VALIDE->value,
             'client.email.unique' => Messages::EMAIL_UNIQUE->value,
             'client.telephone.required' => Messages::TELEPHONE_OBLIGATOIRE->value,
+            'client.telephone.unique' => 'Ce numéro de téléphone est déjà utilisé par un autre compte',
+            'client.nci.required' => 'Le numéro de carte d\'identité nationale (CNI) est obligatoire',
+            'client.nci.string' => 'Le numéro de carte d\'identité nationale (CNI) doit être une chaîne de caractères',
             'client.adresse.string' => Messages::ADRESSE_STRING->value,
             'client.adresse.max' => Messages::ADRESSE_MAX->value,
         ];
@@ -83,7 +86,7 @@ class CreateCompteRequest extends FormRequest
             'soldeInitial' => 'solde initial',
             'client.titulaire' => 'titulaire du compte',
             'client.email' => 'email du client',
-            'client.nci' => 'numéro de carte d\'identité',
+            'client.nci' => 'numéro de carte d\'identité nationale (CNI)',
             'client.telephone' => 'téléphone du client',
             'client.adresse' => 'adresse du client',
         ];

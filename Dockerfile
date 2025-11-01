@@ -45,5 +45,7 @@ USER root
 EXPOSE 9000
 
 # Commande par défaut pour Render
+# 👇 Un seul CMD qui exécute le script de démarrage
 CMD ["/usr/local/bin/start.sh"]
+
 
