@@ -49,11 +49,11 @@ Route::middleware(['api', LoggingMiddleware::class])->group(function () {
 
             Route::middleware([AuthMiddleware::class, RoleMiddleware::class . ':admin'])->get('/', [TransactionController::class, 'index']);
 
-            Route::middleware(AuthMiddleware::class)->get('/{id}', [TransactionController::class, 'show']);
-
             Route::middleware(AuthMiddleware::class)->post('/', [TransactionController::class, 'store']);
 
             Route::middleware([AuthMiddleware::class, RoleMiddleware::class . ':admin'])->get('/recentes', [TransactionController::class, 'getRecentes']);
+
+            Route::middleware(AuthMiddleware::class)->get('/{id}', [TransactionController::class, 'show']);
         });
     });
 });
