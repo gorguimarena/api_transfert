@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('transactions', function (Blueprint $table) {
             $table->uuid('id');
             $table->decimal('montant', 15, 2);
-            $table->enum('type_transaction', ['depot', 'retrait']);
+            $table->enum('type_transaction', ['depot', 'retrait', 'transfert']);
             $table->uuid('compte_id');
             $table->timestamps();
-
+            $table->uuid('compte_destination_id')->nullable();
         });
     }
 

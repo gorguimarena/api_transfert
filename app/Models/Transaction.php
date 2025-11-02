@@ -19,6 +19,7 @@ class Transaction extends Model
         'montant',
         'type_transaction',
         'compte_id',
+        'compte_destination_id',
     ];
 
     protected $casts = [
@@ -29,5 +30,10 @@ class Transaction extends Model
     public function compte()
     {
         return $this->belongsTo(Compte::class);
+    }
+
+    public function compteDestination()
+    {
+        return $this->belongsTo(Compte::class, 'compte_destination_id');
     }
 }

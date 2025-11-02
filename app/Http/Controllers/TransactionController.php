@@ -242,7 +242,7 @@ class TransactionController extends Controller
             'type' => 'required|in:depot,retrait,transfert',
             'montant' => 'required|numeric|min:100',
             'compte_id' => 'required|uuid|exists:comptes,id',
-            'compte_destination_id' => 'nullable|uuid|exists:comptes,id|different:compte_id',
+            'compte_destination_id' => 'nullable|uuid|exists:comptes,id|different:compte_id|required_if:type,transfert',
             'description' => 'nullable|string|max:255',
         ]);
 
@@ -286,6 +286,7 @@ class TransactionController extends Controller
                 'montant' => $request->montant,
                 'type_transaction' => TypeTransaction::from($request->type),
                 'compte_id' => $request->compte_id,
+                'compte_destination_id' => $request->compte_destination_id,
             ]);
 
             // Pour les transferts, créer la transaction de crédit sur le compte destination
@@ -294,6 +295,7 @@ class TransactionController extends Controller
                     'montant' => $request->montant,
                     'type_transaction' => TypeTransaction::DEPOT,
                     'compte_id' => $request->compte_destination_id,
+                    'compte_destination_id' => null, // Pas de destination pour un dépôt
                 ]);
             }
 

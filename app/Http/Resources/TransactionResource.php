@@ -17,6 +17,7 @@ class TransactionResource extends JsonResource
         return [
             'id' => (string) $this->id,
             'compteId' => (string) $this->compte_id,
+            'compteDestinationId' => $this->compte_destination_id ? (string) $this->compte_destination_id : null,
             'type' => (string) $this->type_transaction->value,
             'montant' => (float) $this->montant,
             'devise' => (string) ($this->devise ?? 'FCFA'),
