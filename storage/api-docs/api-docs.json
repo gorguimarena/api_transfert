@@ -634,6 +634,7 @@
                                 ],
                                 "properties": {
                                     "type": {
+                                        "description": "Type de compte (obligatoire)",
                                         "type": "string",
                                         "enum": [
                                             "epargne",
@@ -642,6 +643,7 @@
                                         "example": "cheque"
                                     },
                                     "devise": {
+                                        "description": "Devise du compte (optionnel, défaut: FCFA)",
                                         "type": "string",
                                         "enum": [
                                             "FCFA",
@@ -651,10 +653,13 @@
                                         "example": "FCFA"
                                     },
                                     "soldeInitial": {
+                                        "description": "Solde initial (obligatoire, minimum 10000)",
                                         "type": "number",
+                                        "format": "float",
                                         "example": 500000
                                     },
                                     "client": {
+                                        "description": "Informations du client (obligatoire)",
                                         "required": [
                                             "titulaire",
                                             "email",
@@ -665,28 +670,35 @@
                                                 "description": "ID utilisateur existant (optionnel)",
                                                 "type": "string",
                                                 "format": "uuid",
-                                                "example": null
+                                                "example": null,
+                                                "nullable": true
                                             },
                                             "titulaire": {
+                                                "description": "Nom complet du titulaire (obligatoire)",
                                                 "type": "string",
                                                 "example": "Hawa BB Wane"
                                             },
                                             "email": {
+                                                "description": "Email du client (obligatoire)",
                                                 "type": "string",
                                                 "format": "email",
                                                 "example": "cheikh.sy@example.com"
                                             },
                                             "telephone": {
+                                                "description": "Numéro de téléphone (obligatoire)",
                                                 "type": "string",
                                                 "example": "+221771234567"
                                             },
                                             "nci": {
+                                                "description": "Numéro de carte d'identité nationale (obligatoire)",
                                                 "type": "string",
-                                                "example": ""
+                                                "example": "8798767654567"
                                             },
                                             "adresse": {
+                                                "description": "Adresse du client (optionnel)",
                                                 "type": "string",
-                                                "example": "Dakar, Sénégal"
+                                                "example": "Dakar, Sénégal",
+                                                "nullable": true
                                             }
                                         },
                                         "type": "object"
@@ -1100,6 +1112,528 @@
                     }
                 ]
             }
+        },
+        "/api/v1/transactions": {
+            "get": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Liste paginée de toutes les transactions (admin)",
+                "description": "Récupère une liste paginée de toutes les transactions avec filtres optionnels",
+                "operationId": "9115b43a55e6c92c81e6c62926e4034f",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Numéro de page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Nombre d'éléments par page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Filtrer par type de transaction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "depot",
+                                "retrait",
+                                "transfert"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "date_debut",
+                        "in": "query",
+                        "description": "Date de début (YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_fin",
+                        "in": "query",
+                        "description": "Date de fin (YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des transactions récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Transactions récupérées avec succès"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Transaction"
+                                                    }
+                                                },
+                                                "pagination": {
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Accès refusé - Réservé aux administrateurs",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Accès refusé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "token": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Créer une nouvelle transaction",
+                "description": "Crée une nouvelle transaction (dépôt, retrait, ou transfert)",
+                "operationId": "5968345d7524698be1b46f545cf2a41d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "type",
+                                    "montant",
+                                    "compte_id"
+                                ],
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "depot",
+                                            "retrait",
+                                            "transfert"
+                                        ],
+                                        "example": "depot"
+                                    },
+                                    "montant": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "minimum": 100,
+                                        "example": 50000
+                                    },
+                                    "compte_id": {
+                                        "description": "ID du compte source",
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "compte_destination_id": {
+                                        "description": "ID du compte destination (requis pour transfert)",
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "nullable": true
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Dépôt initial",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Transaction créée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Transaction créée avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Transaction"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erreur de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur de validation"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "token": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/transactions/{id}": {
+            "get": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Détails d'une transaction",
+                "description": "Récupère les détails d'une transaction spécifique",
+                "operationId": "688bc3b066f6fe867ee32162fa08e71b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détails de la transaction récupérés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Transaction récupérée avec succès"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Transaction"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Transaction non trouvée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Transaction non trouvée"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "token": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/comptes/{id}/transactions": {
+            "get": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Liste des transactions d'un compte",
+                "description": "Récupère la liste des transactions d'un compte spécifique",
+                "operationId": "10a465a6109f4a5545790a50e6c39f00",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Numéro de page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Nombre d'éléments par page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Transactions du compte récupérées avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Transactions récupérées avec succès"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "token": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/comptes/{id}/transactions/stats": {
+            "get": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Statistiques du compte",
+                "description": "Récupère les statistiques d'un compte (solde, nombre de transactions, etc.)",
+                "operationId": "d5fbaadca223aec3537c40864e0b7027",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Statistiques récupérées avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Statistiques récupérées avec succès"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "solde": {
+                                                    "type": "number",
+                                                    "example": 1250000
+                                                },
+                                                "totalDepots": {
+                                                    "type": "number",
+                                                    "example": 1500000
+                                                },
+                                                "totalRetraits": {
+                                                    "type": "number",
+                                                    "example": 250000
+                                                },
+                                                "nombreTransactions": {
+                                                    "type": "integer",
+                                                    "example": 45
+                                                },
+                                                "derniereTransaction": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "token": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/transactions/recentes": {
+            "get": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "10 dernières transactions globales",
+                "description": "Récupère les 10 dernières transactions de tous les comptes (admin seulement)",
+                "operationId": "db99e4bc24446344bfa3175b9a34a424",
+                "responses": {
+                    "200": {
+                        "description": "Dernières transactions récupérées avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Dernières transactions récupérées avec succès"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Transaction"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Accès refusé - Réservé aux administrateurs",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Accès refusé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "token": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -1265,6 +1799,62 @@
                     }
                 },
                 "type": "object"
+            },
+            "Transaction": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "compteId": {
+                        "description": "ID du compte associé",
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "depot",
+                            "retrait",
+                            "transfert"
+                        ],
+                        "example": "depot"
+                    },
+                    "montant": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 50000
+                    },
+                    "devise": {
+                        "type": "string",
+                        "enum": [
+                            "FCFA",
+                            "EUR",
+                            "USD"
+                        ],
+                        "example": "FCFA"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Dépôt initial",
+                        "nullable": true
+                    },
+                    "dateTransaction": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2023-03-15T00:00:00Z"
+                    },
+                    "statut": {
+                        "type": "string",
+                        "enum": [
+                            "validee",
+                            "annulee"
+                        ],
+                        "example": "validee"
+                    }
+                },
+                "type": "object"
             }
         },
         "securitySchemes": {
@@ -1290,6 +1880,10 @@
         {
             "name": "Comptes",
             "description": "Comptes"
+        },
+        {
+            "name": "Transactions",
+            "description": "Transactions"
         }
     ],
     "security": [

@@ -3,6 +3,11 @@ FROM composer:2.6 AS composer-build
 
 WORKDIR /app
 
+# Installer PECL et MongoDB
+RUN apk add --no-cache bash zlib-dev gcc musl-dev make autoconf g++ \
+    && pecl install mongodb \
+    && docker-php-ext-enable mongodb
+    
 # Copier les fichiers de dépendances
 COPY composer.json composer.lock ./
 

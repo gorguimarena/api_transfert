@@ -3,10 +3,12 @@
 namespace App\Console\Commands;
 
 use App\Jobs\ArchiveComptesJob;
+use App\Jobs\ArchiveTransactionsJob;
 use App\Jobs\DebloquerComptesJob;
 use App\Jobs\RestoreComptesJob;
 use App\Jobs\ReviewFailedJobs;
 use Illuminate\Console\Command;
+use Carbon\Carbon;
 
 class ScheduleJobsCommand extends Command
 {
@@ -15,7 +17,7 @@ class ScheduleJobsCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'jobs:run-scheduled';
+    protected $signature = 'jobs:run-scheduled {--weekly : Run weekly jobs instead of daily}';
 
     /**
      * The console command description.
@@ -28,6 +30,15 @@ class ScheduleJobsCommand extends Command
      * Execute the console command.
      */
     public function handle()
+    {
+        if ($this->option('weekly')) {
+            $this->runWeeklyJobs();
+        } else {
+            $this->runDailyJobs();
+        }
+    }
+
+    private function runDailyJobs()
     {
         $this->info('Exécution des jobs planifiés quotidiens...');
 
@@ -48,5 +59,16 @@ class ScheduleJobsCommand extends Command
         ReviewFailedJobs::dispatch();
 
         $this->info('Tous les jobs quotidiens exécutés avec succès!');
+    }
+
+    private function runWeeklyJobs()
+    {
+        $this->info('Exécution des jobs planifiés hebdomadaires...');
+
+        // Exécuter le job d'archivage des transactions de la semaine précédente vers MongoDB
+        $this->info('Archivage des transactions de la semaine précédente vers MongoDB...');
+        ArchiveTransactionsJob::dispatch();
+
+        $this->info('Tous les jobs hebdomadaires exécutés avec succès!');
     }
 }
