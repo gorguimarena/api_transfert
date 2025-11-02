@@ -41,6 +41,13 @@ return [
         'from' => env('TWILIO_FROM'),
     ],
 
+    'gmail' => [
+        'username' => env('MAIL_USERNAME'),
+        'password' => env('MAIL_PASSWORD'),
+        'from_address' => env('MAIL_FROM_ADDRESS'),
+        'from_name' => env('MAIL_FROM_NAME'),
+    ],
+
     'passport' => [
         'client_id' => env('PASSPORT_PASSWORD_CLIENT_ID'),
         'client_secret' => env('PASSPORT_PASSWORD_CLIENT_SECRET'),

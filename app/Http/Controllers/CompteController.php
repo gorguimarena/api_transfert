@@ -277,17 +277,17 @@ class CompteController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             required={"type", "soldeInitial", "client"},
-     *             @OA\Property(property="type", type="string", enum={"epargne", "cheque"}, example="cheque"),
-     *             @OA\Property(property="devise", type="string", enum={"FCFA", "EUR", "USD"}, example="FCFA"),
-     *             @OA\Property(property="soldeInitial", type="number", example=500000),
-     *             @OA\Property(property="client", type="object",
+     *             @OA\Property(property="type", type="string", enum={"epargne", "cheque"}, example="cheque", description="Type de compte (obligatoire)"),
+     *             @OA\Property(property="devise", type="string", enum={"FCFA", "EUR", "USD"}, example="FCFA", description="Devise du compte (optionnel, défaut: FCFA)"),
+     *             @OA\Property(property="soldeInitial", type="number", format="float", example=500000, description="Solde initial (obligatoire, minimum 10000)"),
+     *             @OA\Property(property="client", type="object", description="Informations du client (obligatoire)",
      *                 required={"titulaire", "email", "telephone"},
-     *                 @OA\Property(property="id", type="string", format="uuid", description="ID utilisateur existant (optionnel)", example=null),
-     *                 @OA\Property(property="titulaire", type="string", example="Hawa BB Wane"),
-     *                 @OA\Property(property="email", type="string", format="email", example="cheikh.sy@example.com"),
-     *                 @OA\Property(property="telephone", type="string", example="+221771234567"),
-     *                 @OA\Property(property="nci", type="string", example=""),
-     *                 @OA\Property(property="adresse", type="string", example="Dakar, Sénégal")
+     *                 @OA\Property(property="id", type="string", format="uuid", description="ID utilisateur existant (optionnel)", example=null, nullable=true),
+     *                 @OA\Property(property="titulaire", type="string", example="Hawa BB Wane", description="Nom complet du titulaire (obligatoire)"),
+     *                 @OA\Property(property="email", type="string", format="email", example="cheikh.sy@example.com", description="Email du client (obligatoire)"),
+     *                 @OA\Property(property="telephone", type="string", example="+221771234567", description="Numéro de téléphone (obligatoire)"),
+     *                 @OA\Property(property="nci", type="string", example="8798767654567", description="Numéro de carte d'identité nationale (obligatoire)"),
+     *                 @OA\Property(property="adresse", type="string", example="Dakar, Sénégal", description="Adresse du client (optionnel)", nullable=true)
      *             )
      *         )
      *     ),

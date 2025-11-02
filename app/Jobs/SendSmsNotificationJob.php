@@ -31,9 +31,12 @@ class SendSmsNotificationJob implements ShouldQueue
     {
         // Vérifier si les credentials Twilio sont configurés
         if (!config('services.twilio.sid') || !config('services.twilio.token') || !config('services.twilio.from')) {
-            Log::warning("Configuration Twilio incomplète - simulation d'envoi SMS", [
+            Log::warning("Configuration Twilio incomplète dans services.php - simulation d'envoi SMS", [
                 'telephone' => $this->telephone,
-                'code' => $this->code
+                'code' => $this->code,
+                'twilio_sid' => config('services.twilio.sid') ?: 'missing',
+                'twilio_token' => config('services.twilio.token') ? 'configured' : 'missing',
+                'twilio_from' => config('services.twilio.from') ?: 'missing'
             ]);
             return;
         }
@@ -52,7 +55,7 @@ class SendSmsNotificationJob implements ShouldQueue
                 'telephone' => $this->telephone,
                 'code' => $this->code,
                 'code_length' => strlen($this->code),
-                'twilio_sid' => config('services.twilio.sid') ? 'configured' : 'missing',
+                'twilio_sid' => config('services.twilio.sid'),
                 'twilio_from' => config('services.twilio.from')
             ]);
 

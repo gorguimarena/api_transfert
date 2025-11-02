@@ -40,16 +40,16 @@ php artisan jobs:run-scheduled
 echo "Starting queue workers..."
 
 # Worker for default queue (general jobs)
-php artisan queue:work --queue=default --tries=3 --timeout=90 --sleep=3 --max-jobs=1000 &
+php artisan queue:work --queue=default --tries=3 --timeout=90 --sleep=3 --max-jobs=1000 > storage/logs/worker.log 2>&1 &
 
 # Worker for email notifications
-php artisan queue:work --queue=emails --tries=3 --timeout=90 --sleep=3 --max-jobs=1000 &
+php artisan queue:work --queue=emails --tries=3 --timeout=90 --sleep=3 --max-jobs=1000 > storage/logs/worker.log 2>&1 &
 
 # Worker for SMS notifications
-php artisan queue:work --queue=sms --tries=3 --timeout=90 --sleep=3 --max-jobs=1000 &
+php artisan queue:work --queue=sms --tries=3 --timeout=90 --sleep=3 --max-jobs=1000 > storage/logs/worker.log 2>&1 &
 
 # Worker for notifications (fallback)
-php artisan queue:work --queue=notifications --tries=3 --timeout=90 --sleep=3 --max-jobs=1000 &
+php artisan queue:work --queue=notifications --tries=3 --timeout=90 --sleep=3 --max-jobs=1000 > storage/logs/worker.log 2>&1 &
 
 # Generate API documentation
 echo "Generating API documentation..."
@@ -68,6 +68,6 @@ php artisan view:cache
 echo "Starting Laravel scheduler..."
 php artisan schedule:work &
 
-# Start Laravel server
-echo "Starting Laravel server..."
-php artisan serve --host=0.0.0.0 --port=10000
+# --- Démarrer le serveur principal ---
+echo "🌐 Starting main process..."
+exec php artisan serve --host=0.0.0.0 --port=${PORT:-9000}

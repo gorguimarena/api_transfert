@@ -99,18 +99,7 @@ return [
         ],
 
         'neon' => [
-            'driver' => 'pgsql',
             'url' => env('NEON_DATABASE_URL'),
-            'host' => env('NEON_DB_HOST'),
-            'port' => env('NEON_DB_PORT', '5432'),
-            'database' => env('NEON_DB_DATABASE'),
-            'username' => env('NEON_DB_USERNAME'),
-            'password' => env('NEON_DB_PASSWORD'),
-            'charset' => 'utf8',
-            'prefix' => '',
-            'prefix_indexes' => false,
-            'search_path' => 'public',
-            'sslmode' => 'require',
         ],
 
         'sqlsrv' => [
@@ -127,6 +116,12 @@ return [
             // 'encrypt' => env('DB_ENCRYPT', 'yes'),
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
+        'mongodb' => [
+            'driver' => 'mongodb',
+            'dsn' => env('MONGO_DB_URL', 'mongodb://localhost:27017'),
+            'database' => env('MONGO_DB_DATABASE', 'laravel_mongodb'),
+        ],
+
 
     ],
 
@@ -163,7 +158,7 @@ return [
 
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-database-'),
+            'prefix' => env('REDIS_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')) . '-database-'),
             'persistent' => env('REDIS_PERSISTENT', false),
         ],
 
